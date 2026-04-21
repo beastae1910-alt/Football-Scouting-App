@@ -25,98 +25,152 @@ const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
     return matchesSearch && matchesPosition && matchesAge;
   });
 
+  const scrollToPlayers = () => {
+    document.getElementById('scout-dashboard').scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="container animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-        <h2 style={{ margin: 0 }}>Player Dashboard</h2>
-        <button onClick={onAddPlayer} className="btn btn-primary">
-          + Add Player
-        </button>
-      </div>
-      <p className="text-muted" style={{ marginBottom: '2rem' }}>
-        Showing {filtered.length} of {players.length} registered players
-      </p>
-
-      {/* Filter Bar */}
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
-        <input
-          type="text"
-          placeholder="Search players..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input-field"
-          style={{ flex: 1, minWidth: '200px' }}
-        />
-
-        <select
-          value={filterPosition}
-          onChange={(e) => setFilterPos(e.target.value)}
-          className="input-field"
-          style={{ width: 'auto', minWidth: '150px' }}
-        >
-          {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
-            <option key={pos} value={pos}>{pos}</option>
-          ))}
-        </select>
-
-        <select
-          value={filterAge}
-          onChange={(e) => setFilterAge(e.target.value)}
-          className="input-field"
-          style={{ width: 'auto', minWidth: '130px' }}
-        >
-          {['All', 'Under 16', 'Under 18', 'Under 21'].map((a) => (
-            <option key={a} value={a}>{a}</option>
-          ))}
-        </select>
-
-        {(search || filterPosition !== 'All' || filterAge !== 'All') && (
-          <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-secondary">
-            Clear
+      
+      {/* Hero Section */}
+      <div className="hero-section">
+        <h1 className="hero-title">Get Discovered. <br/>Build Your Football Profile.</h1>
+        <p className="hero-subtitle">
+          The platform for young talent in India. Upload your best match highlights, showcase your stats, and get noticed by professional scouts nationwide.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button onClick={onAddPlayer} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
+            Create Profile
           </button>
+          <button onClick={scrollToPlayers} className="btn btn-secondary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
+            Browse Players
+          </button>
+        </div>
+      </div>
+
+      {/* How it Works Section */}
+      <div className="how-it-works-grid">
+        <div className="step-card">
+          <div className="step-icon">1</div>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Create Profile</h3>
+          <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Register your details, position, and attributes.</p>
+        </div>
+        <div className="step-card">
+          <div className="step-icon">2</div>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Upload Highlights</h3>
+          <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Add video clips showing your best moments.</p>
+        </div>
+        <div className="step-card">
+          <div className="step-icon">3</div>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Get Discovered</h3>
+          <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Stand out to scouts with AI-driven performance reports.</p>
+        </div>
+      </div>
+
+      {/* Dashboard Section */}
+      <div id="scout-dashboard" style={{ paddingTop: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <h2 style={{ margin: 0 }}>Player Dashboard</h2>
+          <button onClick={onAddPlayer} className="btn btn-primary">
+            + Add Player
+          </button>
+        </div>
+        <p className="text-muted" style={{ marginBottom: '2rem' }}>
+          Showing {filtered.length} of {players.length} registered players
+        </p>
+
+        {/* Filter Bar */}
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+          <input
+            type="text"
+            placeholder="Search players..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input-field"
+            style={{ flex: 1, minWidth: '200px' }}
+          />
+
+          <select
+            value={filterPosition}
+            onChange={(e) => setFilterPos(e.target.value)}
+            className="input-field"
+            style={{ width: 'auto', minWidth: '150px' }}
+          >
+            {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
+              <option key={pos} value={pos}>{pos}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterAge}
+            onChange={(e) => setFilterAge(e.target.value)}
+            className="input-field"
+            style={{ width: 'auto', minWidth: '130px' }}
+          >
+            {['All', 'Under 16', 'Under 18', 'Under 21'].map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+
+          {(search || filterPosition !== 'All' || filterAge !== 'All') && (
+            <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-secondary">
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Player Cards */}
+        {players.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
+            <h3 style={{ marginBottom: '0.5rem' }}>No players yet.</h3>
+            <p className="text-muted" style={{ marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+              The pitch is empty. Be the first to create your profile and start your journey.
+            </p>
+            <button onClick={onAddPlayer} className="btn btn-primary">
+              Create Your Profile
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+            <p className="text-muted">No players match your current filters.</p>
+            <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ marginTop: '1rem' }}>
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid-cards">
+            {filtered.map((player) => (
+              <div key={player.id} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <span 
+                    className="badge" 
+                    style={{ 
+                      background: `${positionColors[player.position]}20` || 'rgba(255,255,255,0.1)', 
+                      color: positionColors[player.position] || '#fff',
+                      border: `1px solid ${positionColors[player.position]}40`
+                    }}
+                  >
+                    {player.position}
+                  </span>
+                </div>
+
+                <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem' }}>{player.name}</h3>
+
+                <div className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem', flex: 1 }}>
+                  <span>Age {player.age}</span>
+                  <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>•</span>
+                  <span>{player.highlights?.length || 0} highlight{player.highlights?.length !== 1 ? 's' : ''}</span>
+                </div>
+
+                <button onClick={() => onSelectPlayer && onSelectPlayer(player)} className="btn btn-secondary" style={{ width: '100%' }}>
+                  View Profile
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Player Cards */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem 0' }}>
-          <p className="text-muted">No players match your current filters.</p>
-          <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ marginTop: '1rem' }}>
-            Clear Filters
-          </button>
-        </div>
-      ) : (
-        <div className="grid-cards">
-          {filtered.map((player) => (
-            <div key={player.id} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ marginBottom: '1rem' }}>
-                <span 
-                  className="badge" 
-                  style={{ 
-                    background: `${positionColors[player.position]}20` || 'rgba(255,255,255,0.1)', 
-                    color: positionColors[player.position] || '#fff',
-                    border: `1px solid ${positionColors[player.position]}40`
-                  }}
-                >
-                  {player.position}
-                </span>
-              </div>
-
-              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem' }}>{player.name}</h3>
-
-              <div className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem', flex: 1 }}>
-                <span>Age {player.age}</span>
-                <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>•</span>
-                <span>{player.highlights?.length || 0} highlight{player.highlights?.length !== 1 ? 's' : ''}</span>
-              </div>
-
-              <button onClick={() => onSelectPlayer && onSelectPlayer(player)} className="btn btn-secondary" style={{ width: '100%' }}>
-                View Profile
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

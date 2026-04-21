@@ -3,158 +3,138 @@ import PlayerDashboard from './PlayerDashboard';
 import PlayerProfile from './PlayerProfile';
 import UploadVideo from './UploadVideo';
 import AddPlayer from './AddPlayer';
+import Auth from './Auth';
 import { supabase } from './supabaseClient';
 
 function App() {
-  const [players, setPlayers] = useState([]);
+  const [user, setUser]           = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [players, setPlayers]     = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [view, setView] = useState('dashboard'); // 'dashboard' | 'profile' | 'upload' | 'add'
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [view, setView]           = useState('dashboard');
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
 
   const selectedPlayer = players.find((p) => p.id === selectedId) || null;
 
-  // Fetch players from Supabase on mount
+  // ── Auth listener ──────────────────────────────────────────
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Fetch players for logged-in user ───────────────────────
+  useEffect(() => {
+    if (!user) { setPlayers([]); return; }
+
     const fetchPlayers = async () => {
       setLoading(true);
+      setError(null);
       const { data, error } = await supabase
         .from('players')
         .select('*')
+        .eq('user_id', user.id)
         .order('name', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching players:', error.message);
-        setError('Failed to load players. Check your Supabase config.');
-      } else {
-        console.log('Raw data from Supabase:', data); // ← check highlights here
-        const normalized = data.map((p) => ({
-          ...p,
-          highlights: p.highlights || [],
-        }));
-        setPlayers(normalized);
-      }
+      if (error) setError('Failed to load players. Please try refreshing.');
+      else setPlayers(data.map((p) => ({ ...p, highlights: p.highlights || [] })));
       setLoading(false);
     };
 
     fetchPlayers();
-  }, []);
+  }, [user]);
 
-  const handleSelectPlayer = (player) => {
-    setSelectedId(player.id);
-    setView('profile');
-  };
+  // ── Handlers ───────────────────────────────────────────────
+  const handleSelectPlayer = (player) => { setSelectedId(player.id); setView('profile'); };
 
-  // Add uploaded video to player's highlights in Supabase + local state
+  const handleSignOut = () => supabase.auth.signOut();
+
   const handleUpload = async (videoData) => {
     const updatedHighlights = [...(selectedPlayer.highlights || []), videoData];
-
-    console.log('Saving to player id:', selectedId, typeof selectedId);
-    console.log('Updated highlights:', updatedHighlights);
-
     const { data, error } = await supabase
-      .from('players')
-      .update({ highlights: updatedHighlights })
-      .eq('id', selectedId)
-      .select(); // returns updated rows so we can verify
+      .from('players').update({ highlights: updatedHighlights })
+      .eq('id', selectedId).select();
 
-    console.log('Update result - data:', data, 'error:', error);
+    if (error) { alert(`DB error: ${error.message}`); return; }
+    if (!data || data.length === 0) { alert('No rows updated!'); return; }
 
-    if (error) {
-      alert(`DB error: ${error.message}`);
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      alert(`No rows updated! Player id "${selectedId}" (type: ${typeof selectedId}) did not match any row.\n\nCheck Supabase Table Editor to see the actual id values.`);
-      return;
-    }
-
-    // Update local state
-    setPlayers((prev) =>
-      prev.map((p) =>
-        p.id === selectedId
-          ? { ...p, highlights: updatedHighlights }
-          : p
-      )
-    );
-
+    setPlayers((prev) => prev.map((p) =>
+      p.id === selectedId ? { ...p, highlights: updatedHighlights } : p
+    ));
     setView('profile');
   };
 
-  // Add newly created player to local state
   const handlePlayerAdded = (newPlayer) => {
     setPlayers((prev) => [...prev, { ...newPlayer, highlights: [] }]);
     setView('dashboard');
   };
 
-  // Generate AI Report and save to Supabase
   const handleGenerateReport = async (reportText) => {
     const { error } = await supabase
-      .from('players')
-      .update({ ai_report: reportText })
-      .eq('id', selectedId);
-
-    if (error) {
-      alert(`Failed to save AI report: ${error.message}\n\nMake sure to add the 'ai_report' column in Supabase!`);
-      return;
-    }
-
-    setPlayers((prev) =>
-      prev.map((p) =>
-        p.id === selectedId ? { ...p, ai_report: reportText } : p
-      )
-    );
+      .from('players').update({ ai_report: reportText }).eq('id', selectedId);
+    if (error) { alert(`Failed to save report: ${error.message}`); return; }
+    setPlayers((prev) => prev.map((p) =>
+      p.id === selectedId ? { ...p, ai_report: reportText } : p
+    ));
   };
 
-  // Loading and error states
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', marginTop: '4rem', fontFamily: 'sans-serif', color: '#555' }}>
-        Loading players...
-      </div>
-    );
-  }
+  // ── Auth loading splash ────────────────────────────────────
+  if (authLoading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif', fontSize: '1rem' }}>
+      Loading...
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div style={{ textAlign: 'center', marginTop: '4rem', fontFamily: 'sans-serif', color: '#c00' }}>
-        {error}
-      </div>
-    );
-  }
+  // ── Not logged in ──────────────────────────────────────────
+  if (!user) return <Auth />;
 
-  if (view === 'add') {
-    return (
-      <AddPlayer
-        onPlayerAdded={handlePlayerAdded}
-        onCancel={() => setView('dashboard')}
-      />
-    );
-  }
+  // ── Main app ───────────────────────────────────────────────
+  return (
+    <>
+      {/* Navigation bar */}
+      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 100 }}>
+        <button onClick={() => setView('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'inherit', letterSpacing: '-0.02em' }}>
+          ScoutIndia ⚽
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span className="text-muted" style={{ fontSize: '0.82rem' }}>{user.email}</span>
+          <button onClick={handleSignOut} className="btn btn-secondary" style={{ padding: '0.4rem 0.9rem', fontSize: '0.82rem' }}>
+            Sign Out
+          </button>
+        </div>
+      </nav>
 
-  if (view === 'upload' && selectedPlayer) {
-    return (
-      <UploadVideo
-        playerName={selectedPlayer.name}
-        onUpload={handleUpload}
-        onCancel={() => setView('profile')}
-      />
-    );
-  }
+      {/* Loading / Error states */}
+      {loading && <div style={{ textAlign: 'center', marginTop: '5rem', color: 'var(--text-secondary)' }}>Loading players...</div>}
+      {error   && <div style={{ textAlign: 'center', marginTop: '5rem', color: 'var(--danger)' }}>{error}</div>}
 
-  if (view === 'profile' && selectedPlayer) {
-    return (
-      <PlayerProfile
-        player={selectedPlayer}
-        onBack={() => setView('dashboard')}
-        onUploadClick={() => setView('upload')}
-        onGenerateReport={handleGenerateReport}
-      />
-    );
-  }
-
-  return <PlayerDashboard players={players} onSelectPlayer={handleSelectPlayer} onAddPlayer={() => setView('add')} />;
+      {/* Views */}
+      {!loading && !error && (
+        <>
+          {view === 'add' && (
+            <AddPlayer user={user} onPlayerAdded={handlePlayerAdded} onCancel={() => setView('dashboard')} />
+          )}
+          {view === 'upload' && selectedPlayer && (
+            <UploadVideo playerName={selectedPlayer.name} onUpload={handleUpload} onCancel={() => setView('profile')} />
+          )}
+          {view === 'profile' && selectedPlayer && (
+            <PlayerProfile player={selectedPlayer} onBack={() => setView('dashboard')} onUploadClick={() => setView('upload')} onGenerateReport={handleGenerateReport} />
+          )}
+          {view === 'dashboard' && (
+            <PlayerDashboard players={players} onSelectPlayer={handleSelectPlayer} onAddPlayer={() => setView('add')} />
+          )}
+        </>
+      )}
+    </>
+  );
 }
 
 export default App;

@@ -3,41 +3,71 @@ import { supabase } from './supabaseClient';
 
 const POSITIONS = ['Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'];
 
+// SECURITY: Strict field length limits (OWASP: reject oversized inputs)
+const LIMITS = { name: 100, city: 100 };
+
+// SECURITY: Sanitize — strips characters used in XSS / HTML injection
+const sanitize = (str) => str.trim().replace(/[<>"'`]/g, '');
+
+// SECURITY: Only allow letters, spaces, hyphens, apostrophes in names
+const isValidName = (str) => /^[a-zA-Z\s'-]+$/.test(str);
+
 const AddPlayer = ({ user, onPlayerAdded, onCancel }) => {
   const [form, setForm]     = useState({ name: '', age: '', position: 'Forward', city: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState(null);
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    // SECURITY: Enforce max length at input time, not just on submit
+    if (LIMITS[name] && value.length > LIMITS[name]) return;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (!form.name.trim())                        return setError('Name is required.');
-    if (!form.age || form.age < 1 || form.age > 40) return setError('Enter a valid age (1–40).');
-    if (!form.city.trim())                        return setError('City is required.');
+    // SECURITY: Sanitize all text inputs before validation and storage
+    const name = sanitize(form.name);
+    const city = sanitize(form.city);
+    const age  = Number(form.age);
+
+    // Validate name — required, max length, allowed characters
+    if (!name)                          return setError('Name is required.');
+    if (name.length > LIMITS.name)      return setError(`Name must be under ${LIMITS.name} characters.`);
+    if (!isValidName(name))             return setError('Name may only contain letters, spaces, hyphens, and apostrophes.');
+
+    // Validate age — must be a real integer in range (no float tricks)
+    if (!Number.isInteger(age) || age < 1 || age > 40)
+      return setError('Enter a valid age between 1 and 40.');
+
+    // Validate position — must be from the whitelist (OWASP: reject unexpected fields)
+    if (!POSITIONS.includes(form.position))
+      return setError('Invalid position selected.');
+
+    // Validate city
+    if (!city)                          return setError('City is required.');
+    if (city.length > LIMITS.city)      return setError(`City must be under ${LIMITS.city} characters.`);
 
     setSaving(true);
 
-    const { data, error } = await supabase
+    const { data, error: dbError } = await supabase
       .from('players')
       .insert([{
-        name:       form.name.trim(),
-        age:        Number(form.age),
-        position:   form.position,
-        city:       form.city.trim(),
+        name,
+        age,
+        position: form.position,
+        city,
         highlights: [],
-        user_id:    user?.id,   // ← links player to logged-in user
+        user_id:    user?.id, // link player to authenticated user
       }])
       .select()
       .single();
 
     setSaving(false);
 
-    if (error) { setError(`Failed to add player: ${error.message}`); return; }
+    if (dbError) { setError(`Failed to save: ${dbError.message}`); return; }
     onPlayerAdded(data);
   };
 
@@ -53,16 +83,18 @@ const AddPlayer = ({ user, onPlayerAdded, onCancel }) => {
       </p>
 
       <div className="card">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
 
           <label style={{ display: 'block', marginBottom: '1.25rem' }}>
-            <span className="text-muted" style={{ fontSize: '0.82rem', display: 'block', marginBottom: '0.4rem', fontWeight: '500' }}>Full Name</span>
-            <input name="name" type="text" placeholder="e.g. Arjun Sharma" value={form.name} onChange={handleChange} className="input-field" />
+            <span className="text-muted" style={{ fontSize: '0.82rem', display: 'block', marginBottom: '0.4rem', fontWeight: '500' }}>
+              Full Name <span style={{ opacity: 0.5 }}>(max {LIMITS.name} chars)</span>
+            </span>
+            <input name="name" type="text" placeholder="e.g. Arjun Sharma" value={form.name} onChange={handleChange} className="input-field" maxLength={LIMITS.name} autoComplete="name" />
           </label>
 
           <label style={{ display: 'block', marginBottom: '1.25rem' }}>
             <span className="text-muted" style={{ fontSize: '0.82rem', display: 'block', marginBottom: '0.4rem', fontWeight: '500' }}>Age</span>
-            <input name="age" type="number" placeholder="e.g. 17" value={form.age} onChange={handleChange} className="input-field" min="1" max="40" />
+            <input name="age" type="number" placeholder="e.g. 17" value={form.age} onChange={handleChange} className="input-field" min="1" max="40" step="1" />
           </label>
 
           <label style={{ display: 'block', marginBottom: '1.25rem' }}>
@@ -73,21 +105,20 @@ const AddPlayer = ({ user, onPlayerAdded, onCancel }) => {
           </label>
 
           <label style={{ display: 'block', marginBottom: '1.5rem' }}>
-            <span className="text-muted" style={{ fontSize: '0.82rem', display: 'block', marginBottom: '0.4rem', fontWeight: '500' }}>City</span>
-            <input name="city" type="text" placeholder="e.g. Mumbai" value={form.city} onChange={handleChange} className="input-field" />
+            <span className="text-muted" style={{ fontSize: '0.82rem', display: 'block', marginBottom: '0.4rem', fontWeight: '500' }}>
+              City <span style={{ opacity: 0.5 }}>(max {LIMITS.city} chars)</span>
+            </span>
+            <input name="city" type="text" placeholder="e.g. Mumbai" value={form.city} onChange={handleChange} className="input-field" maxLength={LIMITS.city} />
           </label>
 
           {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>}
 
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button type="submit" disabled={saving} className="btn btn-primary" style={{ padding: '0.7rem 1.5rem' }}>
+            <button type="submit" disabled={saving} className="btn btn-primary" style={{ padding: '0.7rem 1.5rem', opacity: saving ? 0.7 : 1 }}>
               {saving ? 'Saving...' : 'Create Profile'}
             </button>
-            <button type="button" onClick={onCancel} className="btn btn-secondary">
-              Cancel
-            </button>
+            <button type="button" onClick={onCancel} className="btn btn-secondary">Cancel</button>
           </div>
-
         </form>
       </div>
     </div>

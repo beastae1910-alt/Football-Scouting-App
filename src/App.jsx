@@ -181,7 +181,12 @@ function App() {
           {view === 'dashboard' && (
             <div style={{ paddingTop: '1rem' }}>
               {/* Optional role-specific header can go here */}
-              <PlayerDashboard players={players} onSelectPlayer={handleSelectPlayer} onAddPlayer={user.user_metadata.role === 'player' ? () => setView('add') : null} />
+              <PlayerDashboard 
+                players={players} 
+                userRole={user.user_metadata.role}
+                onSelectPlayer={handleSelectPlayer} 
+                onAddPlayer={user.user_metadata.role === 'player' && players.length === 0 ? () => setView('add') : null} 
+              />
             </div>
           )}
         </>

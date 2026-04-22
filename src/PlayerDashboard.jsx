@@ -8,7 +8,7 @@ const positionColors = {
   Defender:   '#10B981',
 };
 
-const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
+const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }) => {
   const [search, setSearch]             = useState('');
   const [filterPosition, setFilterPos]  = useState('All');
   const [filterAge, setFilterAge]       = useState('All');
@@ -32,42 +32,75 @@ const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
   return (
     <div className="container animate-fade-in">
       
-      {/* Hero Section */}
-      <div className="hero-section">
-        <h1 className="hero-title">Get Discovered. <br/>Build Your Football Profile.</h1>
-        <p className="hero-subtitle">
-          The platform for young talent in India. Upload your best match highlights, showcase your stats, and get noticed by professional scouts nationwide.
-        </p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {onAddPlayer && (
-            <button onClick={onAddPlayer} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
-              Create Profile
-            </button>
-          )}
-          <button onClick={scrollToPlayers} className="btn btn-secondary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
-            Browse Players
-          </button>
+      {/* Conditional Hero / Stats Section */}
+      {userRole === 'player' && players.length > 0 ? (
+        <div className="hero-section" style={{ padding: '3rem 1rem 2rem' }}>
+          <h1 className="hero-title" style={{ fontSize: '2.5rem' }}>Welcome Back, {players[0].name}</h1>
+          <p className="hero-subtitle">
+            Your profile is live. Upload highlights to increase your chances of getting scouted.
+          </p>
+          <div style={{ display: 'flex', gap: '2.5rem', justifyContent: 'center', marginTop: '2rem', flexWrap: 'wrap' }}>
+            <div>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--accent-primary)' }}>142</strong><br/>
+              <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scout Views</span>
+            </div>
+            <div>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--success)' }}>18</strong><br/>
+              <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Search Appearances</span>
+            </div>
+            <div>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--warning)' }}>{players[0].highlights?.length || 0}</strong><br/>
+              <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Highlights</span>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : userRole === 'player' ? (
+        <>
+          <div className="hero-section">
+            <h1 className="hero-title">Get Discovered. <br/>Build Your Football Profile.</h1>
+            <p className="hero-subtitle">
+              Create your football profile to get discovered. Upload your best match highlights and get noticed by professional scouts nationwide.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {onAddPlayer && (
+                <button onClick={onAddPlayer} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
+                  Create Profile
+                </button>
+              )}
+            </div>
+          </div>
 
-      {/* How it Works Section */}
-      <div className="how-it-works-grid">
-        <div className="step-card">
-          <div className="step-icon">1</div>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Create Profile</h3>
-          <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Register your details, position, and attributes.</p>
+          <div className="how-it-works-grid">
+            <div className="step-card">
+              <div className="step-icon">1</div>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Create Profile</h3>
+              <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Register your details, position, and attributes.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-icon">2</div>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Upload Highlights</h3>
+              <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Add video clips showing your best moments.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-icon">3</div>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Get Discovered</h3>
+              <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Stand out to scouts with AI-driven performance reports.</p>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="hero-section">
+          <h1 className="hero-title">Scout Dashboard</h1>
+          <p className="hero-subtitle">
+            Discover talented players and analyze their performance.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={scrollToPlayers} className="btn btn-secondary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
+              Browse Players
+            </button>
+          </div>
         </div>
-        <div className="step-card">
-          <div className="step-icon">2</div>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Upload Highlights</h3>
-          <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Add video clips showing your best moments.</p>
-        </div>
-        <div className="step-card">
-          <div className="step-icon">3</div>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Get Discovered</h3>
-          <p className="text-muted" style={{ margin: 0, fontSize: '0.9rem' }}>Stand out to scouts with AI-driven performance reports.</p>
-        </div>
-      </div>
+      )}
 
       {/* Dashboard Section */}
       <div id="scout-dashboard" style={{ paddingTop: '2rem' }}>
@@ -129,9 +162,9 @@ const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
             <h3 style={{ marginBottom: '0.5rem' }}>No players yet.</h3>
             <p className="text-muted" style={{ marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
-              {onAddPlayer 
-                ? "The pitch is empty. Be the first to create your profile and start your journey."
-                : "The pitch is empty. No players have registered yet."}
+              {userRole === 'scout'
+                ? "No players available yet. Check back later."
+                : "Create your football profile to get discovered."}
             </p>
             {onAddPlayer && (
               <button onClick={onAddPlayer} className="btn btn-primary">

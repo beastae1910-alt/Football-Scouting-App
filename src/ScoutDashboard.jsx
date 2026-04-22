@@ -86,9 +86,10 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   }, [players]);
 
   // 3. REAL SEARCH & Filter
+  const normalizedSearch = searchQuery.trim().toLowerCase();
   const filtered = (players || []).filter(p => {
     const matchesPos = filterPosition === 'All' || p.position === filterPosition;
-    const matchesName = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
     return matchesPos && matchesName;
   });
 
@@ -103,7 +104,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       </div>
 
       {/* FEATURE 1 & 2: Top Players & Recent Views */}
-      {players && players.length > 0 && (
+      {players && players.length > 0 && searchQuery.trim().length === 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
           <div>
             <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>🔥 Top Players</h3>

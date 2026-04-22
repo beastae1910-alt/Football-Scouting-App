@@ -155,7 +155,7 @@ function App() {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span className="text-muted" style={{ fontSize: '0.82rem', display: 'none' }} className="hide-mobile">{user.email}</span>
+          <span className="text-muted hide-mobile" style={{ fontSize: '0.82rem' }}>{user.email}</span>
           <button onClick={handleSignOut} className="btn btn-secondary" style={{ padding: '0.4rem 0.9rem', fontSize: '0.82rem' }}>
             Sign Out
           </button>

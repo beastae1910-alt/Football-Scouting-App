@@ -34,13 +34,13 @@ const PlayerProfile = ({ player, onBack, onUploadClick, onGenerateReport }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Hooks must come before any early returns (Rules of Hooks)
+  const reportTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(reportTimerRef.current), []);
+
   if (!player) return <div>Player not found</div>;
 
   const badge = getCredibilityBadge(player.highlights);
-
-  // BUG FIX: Store timeout ID so it can be cancelled if user navigates away
-  const reportTimerRef = useRef(null);
-  useEffect(() => () => clearTimeout(reportTimerRef.current), []);
 
   const generateReportText = () => {
     setIsGenerating(true);

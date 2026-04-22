@@ -12,7 +12,7 @@ const STAT_LABELS = {
 };
 
 const STRENGTH_PHRASES = {
-  pace:       'exceptional pace that allows him to beat defenders in behind',
+  pace:       'exceptional pace to beat defenders in behind',
   shooting:   'clinical finishing and strong shooting ability',
   passing:    'excellent passing range and vision in tight spaces',
   dribbling:  'outstanding dribbling and close control under pressure',
@@ -21,12 +21,12 @@ const STRENGTH_PHRASES = {
 };
 
 const WEAKNESS_PHRASES = {
-  pace:       'limited pace which restricts his ability to press effectively',
+  pace:       'limited pace which restricts effective pressing',
   shooting:   'poor finishing — needs significant work in front of goal',
   passing:    'below-par passing accuracy — struggles to retain possession',
   dribbling:  'weak dribbling — often dispossessed in tight areas',
   defending:  'poor defensive positioning and weak in the challenge',
-  physical:   'lacks physicality and can be bullied off the ball',
+  physical:   'lack of physicality — can be bullied off the ball',
 };
 
 export const generateReport = (player) => {

@@ -18,9 +18,9 @@ const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
     const matchesPosition = filterPosition === 'All' || p.position === filterPosition;
     const matchesAge =
       filterAge === 'All'      ? true :
-      filterAge === 'Under 16' ? p.age < 16 :
-      filterAge === 'Under 18' ? p.age < 18 :
-      filterAge === 'Under 21' ? p.age < 21 : true;
+      filterAge === 'Under 16' ? p.age <= 16 :
+      filterAge === 'Under 18' ? p.age <= 18 :
+      filterAge === 'Under 21' ? p.age <= 21 : true;
 
     return matchesSearch && matchesPosition && matchesAge;
   });

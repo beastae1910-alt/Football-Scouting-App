@@ -42,8 +42,8 @@ const RoleSelection = ({ user, onRoleSelected }) => {
         data: { role }
       });
 
-      // Pass updated role back
-      onRoleSelected({ ...user, role });
+      // Pass updated role back with correct user_metadata structure
+      onRoleSelected({ ...user, user_metadata: { ...user.user_metadata, role } });
 
     } catch (err) {
       setError(`Failed to save role: ${err.message}`);

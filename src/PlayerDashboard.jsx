@@ -39,9 +39,11 @@ const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
           The platform for young talent in India. Upload your best match highlights, showcase your stats, and get noticed by professional scouts nationwide.
         </p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={onAddPlayer} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
-            Create Profile
-          </button>
+          {onAddPlayer && (
+            <button onClick={onAddPlayer} className="btn btn-primary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
+              Create Profile
+            </button>
+          )}
           <button onClick={scrollToPlayers} className="btn btn-secondary" style={{ padding: '0.8rem 1.5rem', fontSize: '1rem' }}>
             Browse Players
           </button>
@@ -71,9 +73,11 @@ const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
       <div id="scout-dashboard" style={{ paddingTop: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
           <h2 style={{ margin: 0 }}>Player Dashboard</h2>
-          <button onClick={onAddPlayer} className="btn btn-primary">
-            + Add Player
-          </button>
+          {onAddPlayer && (
+            <button onClick={onAddPlayer} className="btn btn-primary">
+              + Add Player
+            </button>
+          )}
         </div>
         <p className="text-muted" style={{ marginBottom: '2rem' }}>
           Showing {filtered.length} of {players.length} registered players
@@ -125,11 +129,15 @@ const PlayerDashboard = ({ players = [], onSelectPlayer, onAddPlayer }) => {
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
             <h3 style={{ marginBottom: '0.5rem' }}>No players yet.</h3>
             <p className="text-muted" style={{ marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
-              The pitch is empty. Be the first to create your profile and start your journey.
+              {onAddPlayer 
+                ? "The pitch is empty. Be the first to create your profile and start your journey."
+                : "The pitch is empty. No players have registered yet."}
             </p>
-            <button onClick={onAddPlayer} className="btn btn-primary">
-              Create Your Profile
-            </button>
+            {onAddPlayer && (
+              <button onClick={onAddPlayer} className="btn btn-primary">
+                Create Your Profile
+              </button>
+            )}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem 0' }}>

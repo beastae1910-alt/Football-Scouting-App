@@ -4,22 +4,22 @@ import PlayerProfile from './PlayerProfile';
 import UploadVideo from './UploadVideo';
 import AddPlayer from './AddPlayer';
 import Auth from './Auth';
+import RoleSelection from './RoleSelection';
 import { supabase } from './supabaseClient';
 
 function App() {
-  const [user, setUser]           = useState(null);
+  const [user, setUser]               = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [players, setPlayers]     = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [view, setView]           = useState('dashboard');
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState(null);
+  const [players, setPlayers]         = useState([]);
+  const [selectedId, setSelectedId]   = useState(null);
+  const [view, setView]               = useState('dashboard');
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState(null);
 
   const selectedPlayer = players.find((p) => p.id === selectedId) || null;
 
   // ── Auth listener ──────────────────────────────────────────
   useEffect(() => {
-    // BUG FIX: Added .catch so a network error can't freeze the app on "Loading..."
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         setUser(session?.user ?? null);
@@ -41,21 +41,31 @@ function App() {
     }
   }, [view, selectedPlayer]);
 
-  // ── Fetch players for logged-in user ───────────────────────
+  // ── Fetch players based on user role ───────────────────────
   useEffect(() => {
-    if (!user) { setPlayers([]); return; }
+    if (!user || !user.user_metadata?.role) {
+      setPlayers([]);
+      return;
+    }
 
     const fetchPlayers = async () => {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('name', { ascending: true });
+      
+      let query = supabase.from('players').select('*').order('name', { ascending: true });
+      
+      // If player, only fetch their own profiles. If scout, fetch all.
+      if (user.user_metadata.role === 'player') {
+        query = query.eq('user_id', user.id);
+      }
 
-      if (error) setError('Failed to load players. Please try refreshing.');
-      else setPlayers(data.map((p) => ({ ...p, highlights: p.highlights || [] })));
+      const { data, error } = await query;
+
+      if (error) {
+        setError('Failed to load players. Please try refreshing.');
+      } else {
+        setPlayers(data.map((p) => ({ ...p, highlights: p.highlights || [] })));
+      }
       setLoading(false);
     };
 
@@ -67,17 +77,22 @@ function App() {
 
   const handleSignOut = () => supabase.auth.signOut();
 
+  const handleRoleSelected = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
   const handleUpload = async (videoData) => {
-    // BUG FIX: Guard against null selectedPlayer (race condition on reload)
     if (!selectedPlayer) return;
 
     const updatedHighlights = [...(selectedPlayer.highlights || []), videoData];
-    const { data, error } = await supabase
-      .from('players').update({ highlights: updatedHighlights })
-      // BUG FIX: added user_id guard — defense-in-depth when RLS is disabled
-      .eq('id', selectedId)
-      .eq('user_id', user.id)
-      .select();
+    
+    // Only verify user_id if the user is a player modifying their own profile
+    let query = supabase.from('players').update({ highlights: updatedHighlights }).eq('id', selectedId);
+    if (user.user_metadata?.role === 'player') {
+      query = query.eq('user_id', user.id);
+    }
+    
+    const { data, error } = await query.select();
 
     if (error) { alert(`DB error: ${error.message}`); return; }
     if (!data || data.length === 0) { alert('No rows updated!'); return; }
@@ -94,12 +109,14 @@ function App() {
   };
 
   const handleGenerateReport = async (reportText) => {
-    const { error } = await supabase
-      .from('players').update({ ai_report: reportText })
-      // BUG FIX: added user_id guard — defense-in-depth when RLS is disabled
-      .eq('id', selectedId)
-      .eq('user_id', user.id);
+    let query = supabase.from('players').update({ ai_report: reportText }).eq('id', selectedId);
+    if (user.user_metadata?.role === 'player') {
+      query = query.eq('user_id', user.id);
+    }
+    
+    const { error } = await query;
     if (error) { alert(`Failed to save report: ${error.message}`); return; }
+    
     setPlayers((prev) => prev.map((p) =>
       p.id === selectedId ? { ...p, ai_report: reportText } : p
     ));
@@ -115,16 +132,30 @@ function App() {
   // ── Not logged in ──────────────────────────────────────────
   if (!user) return <Auth />;
 
+  // ── Role Selection ─────────────────────────────────────────
+  if (!user.user_metadata?.role) {
+    return <RoleSelection user={user} onRoleSelected={handleRoleSelected} />;
+  }
+
   // ── Main app ───────────────────────────────────────────────
+  const roleLabel = user.user_metadata.role === 'scout' ? 'Scout Dashboard' : 'Player Dashboard';
+  const roleBadgeColor = user.user_metadata.role === 'scout' ? 'var(--success)' : 'var(--accent-primary)';
+  const roleBadgeBg = user.user_metadata.role === 'scout' ? 'var(--success-bg)' : 'rgba(59, 130, 246, 0.1)';
+
   return (
     <>
       {/* Navigation bar */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 100 }}>
-        <button onClick={() => setView('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'inherit', letterSpacing: '-0.02em' }}>
-          ScoutIndia ⚽
-        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span className="text-muted" style={{ fontSize: '0.82rem' }}>{user.email}</span>
+          <button onClick={() => setView('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'inherit', letterSpacing: '-0.02em', padding: 0 }}>
+            ScoutIndia ⚽
+          </button>
+          <span className="badge" style={{ background: roleBadgeBg, color: roleBadgeColor, border: `1px solid ${roleBadgeColor}40`, textTransform: 'capitalize' }}>
+            {user.user_metadata.role}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span className="text-muted" style={{ fontSize: '0.82rem', display: 'none' }} className="hide-mobile">{user.email}</span>
           <button onClick={handleSignOut} className="btn btn-secondary" style={{ padding: '0.4rem 0.9rem', fontSize: '0.82rem' }}>
             Sign Out
           </button>
@@ -148,10 +179,17 @@ function App() {
             <PlayerProfile player={selectedPlayer} onBack={() => setView('dashboard')} onUploadClick={() => setView('upload')} onGenerateReport={handleGenerateReport} />
           )}
           {view === 'dashboard' && (
-            <PlayerDashboard players={players} onSelectPlayer={handleSelectPlayer} onAddPlayer={() => setView('add')} />
+            <div style={{ paddingTop: '1rem' }}>
+              {/* Optional role-specific header can go here */}
+              <PlayerDashboard players={players} onSelectPlayer={handleSelectPlayer} onAddPlayer={user.user_metadata.role === 'player' ? () => setView('add') : null} />
+            </div>
           )}
         </>
       )}
+      
+      <style>{`
+        @media (max-width: 600px) { .hide-mobile { display: none !important; } }
+      `}</style>
     </>
   );
 }

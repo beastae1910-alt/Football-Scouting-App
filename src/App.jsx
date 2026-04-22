@@ -10,6 +10,7 @@ import { supabase } from './supabaseClient';
 
 function App() {
   const [user, setUser]               = useState(null);
+  const [profile, setProfile]         = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [players, setPlayers]         = useState([]);
   const [selectedId, setSelectedId]   = useState(null);
@@ -34,6 +35,28 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // ── Fetch Profile ──────────────────────────────────────────
+  useEffect(() => {
+    let isMounted = true;
+
+    if (user) {
+      supabase.from('profiles').select('*').eq('id', user.id).single()
+        .then(({ data, error }) => {
+          if (!isMounted) return;
+          if (error) {
+            console.error('Profile fetch error:', error.message);
+            setProfile(null);
+          } else {
+            setProfile(data);
+          }
+        });
+    } else {
+      if (isMounted) setProfile(null);
+    }
+
+    return () => { isMounted = false; };
+  }, [user]);
 
   // ── Guard: reset to dashboard if profile view loses its player ─
   useEffect(() => {
@@ -132,6 +155,13 @@ function App() {
 
   // ── Not logged in ──────────────────────────────────────────
   if (!user) return <Auth />;
+
+  // ── Profile loading splash ─────────────────────────────────
+  if (!profile) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: 'var(--text-secondary)' }}>
+      Loading profile...
+    </div>
+  );
 
   // ── Role Selection ─────────────────────────────────────────
   if (!user.user_metadata?.role) {

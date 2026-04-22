@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PlayerDashboard from './PlayerDashboard';
+import ScoutDashboard from './ScoutDashboard';
 import PlayerProfile from './PlayerProfile';
 import UploadVideo from './UploadVideo';
 import AddPlayer from './AddPlayer';
@@ -180,13 +181,19 @@ function App() {
           )}
           {view === 'dashboard' && (
             <div style={{ paddingTop: '1rem' }}>
-              {/* Optional role-specific header can go here */}
-              <PlayerDashboard 
-                players={players} 
-                userRole={user.user_metadata.role}
-                onSelectPlayer={handleSelectPlayer} 
-                onAddPlayer={user.user_metadata.role === 'player' && players.length === 0 ? () => setView('add') : null} 
-              />
+              {profile?.role === 'scout' ? (
+                <ScoutDashboard 
+                  players={players} 
+                  onSelectPlayer={handleSelectPlayer} 
+                />
+              ) : (
+                <PlayerDashboard 
+                  players={players} 
+                  userRole={user.user_metadata.role}
+                  onSelectPlayer={handleSelectPlayer} 
+                  onAddPlayer={players.length === 0 ? () => setView('add') : null} 
+                />
+              )}
             </div>
           )}
         </>

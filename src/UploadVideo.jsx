@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 // SECURITY: Whitelist of accepted video MIME types (OWASP: restrict file type)
@@ -34,9 +34,16 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
     }
 
     setVideoFile(file);
-    setVideoURL(URL.createObjectURL(file)); // local preview only — not persisted
+    // BUG FIX: Revoke previous blob URL before creating a new one to prevent memory leak
+    setVideoURL((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
     setUploadError(null);
   };
+
+  // BUG FIX: Revoke blob URL when component unmounts
+  useEffect(() => {
+    return () => { if (videoURL) URL.revokeObjectURL(videoURL); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleUpload = async () => {
     if (!videoFile) return;

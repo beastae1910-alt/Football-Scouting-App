@@ -19,10 +19,13 @@ function App() {
 
   // ── Auth listener ──────────────────────────────────────────
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-    });
+    // BUG FIX: Added .catch so a network error can't freeze the app on "Loading..."
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        setAuthLoading(false);
+      })
+      .catch(() => setAuthLoading(false));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -30,6 +33,13 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // ── Guard: reset to dashboard if profile view loses its player ─
+  useEffect(() => {
+    if (view === 'profile' && !selectedPlayer) {
+      setView('dashboard');
+    }
+  }, [view, selectedPlayer]);
 
   // ── Fetch players for logged-in user ───────────────────────
   useEffect(() => {
@@ -58,10 +68,16 @@ function App() {
   const handleSignOut = () => supabase.auth.signOut();
 
   const handleUpload = async (videoData) => {
+    // BUG FIX: Guard against null selectedPlayer (race condition on reload)
+    if (!selectedPlayer) return;
+
     const updatedHighlights = [...(selectedPlayer.highlights || []), videoData];
     const { data, error } = await supabase
       .from('players').update({ highlights: updatedHighlights })
-      .eq('id', selectedId).select();
+      // BUG FIX: added user_id guard — defense-in-depth when RLS is disabled
+      .eq('id', selectedId)
+      .eq('user_id', user.id)
+      .select();
 
     if (error) { alert(`DB error: ${error.message}`); return; }
     if (!data || data.length === 0) { alert('No rows updated!'); return; }
@@ -79,7 +95,10 @@ function App() {
 
   const handleGenerateReport = async (reportText) => {
     const { error } = await supabase
-      .from('players').update({ ai_report: reportText }).eq('id', selectedId);
+      .from('players').update({ ai_report: reportText })
+      // BUG FIX: added user_id guard — defense-in-depth when RLS is disabled
+      .eq('id', selectedId)
+      .eq('user_id', user.id);
     if (error) { alert(`Failed to save report: ${error.message}`); return; }
     setPlayers((prev) => prev.map((p) =>
       p.id === selectedId ? { ...p, ai_report: reportText } : p

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { generateReport } from './generateReport';
 
 const getCredibilityBadge = (highlights = []) => {
@@ -38,9 +38,13 @@ const PlayerProfile = ({ player, onBack, onUploadClick, onGenerateReport }) => {
 
   const badge = getCredibilityBadge(player.highlights);
 
+  // BUG FIX: Store timeout ID so it can be cancelled if user navigates away
+  const reportTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(reportTimerRef.current), []);
+
   const generateReportText = () => {
     setIsGenerating(true);
-    setTimeout(() => {
+    reportTimerRef.current = setTimeout(() => {
       onGenerateReport(generateReport(player));
       setIsGenerating(false);
     }, 1200);
@@ -60,7 +64,8 @@ const PlayerProfile = ({ player, onBack, onUploadClick, onGenerateReport }) => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', 
           fontSize: '2rem', fontWeight: '800', color: 'var(--accent-primary)' 
         }}>
-          {player.name[0]}
+          {/* BUG FIX: guard against empty name string */}
+          {player.name?.[0]?.toUpperCase() || '?'}
         </div>
 
         <div style={{ flex: 1, minWidth: '200px' }}>

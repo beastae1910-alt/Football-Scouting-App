@@ -176,7 +176,7 @@ function App() {
             <UploadVideo playerName={selectedPlayer.name} onUpload={handleUpload} onCancel={() => setView('profile')} />
           )}
           {view === 'profile' && selectedPlayer && (
-            <PlayerProfile player={selectedPlayer} onBack={() => setView('dashboard')} onUploadClick={() => setView('upload')} onGenerateReport={handleGenerateReport} />
+            <PlayerProfile player={selectedPlayer} userRole={user.user_metadata?.role} viewerId={user.id} onBack={() => setView('dashboard')} onUploadClick={() => setView('upload')} onGenerateReport={handleGenerateReport} />
           )}
           {view === 'dashboard' && (
             <div style={{ paddingTop: '1rem' }}>

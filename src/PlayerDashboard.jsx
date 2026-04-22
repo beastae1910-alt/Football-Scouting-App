@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
 
 const positionColors = {
   Forward:    '#F59E0B',
@@ -12,6 +13,20 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
   const [search, setSearch]             = useState('');
   const [filterPosition, setFilterPos]  = useState('All');
   const [filterAge, setFilterAge]       = useState('All');
+  const [realViews, setRealViews]       = useState(null);
+
+  useEffect(() => {
+    if (userRole === 'player' && players.length > 0) {
+      const fetchViews = async () => {
+        const { count } = await supabase
+          .from('player_views')
+          .select('*', { count: 'exact', head: true })
+          .eq('player_id', players[0].id);
+        setRealViews(count || 0);
+      };
+      fetchViews();
+    }
+  }, [userRole, players]);
 
   const filtered = players.filter((p) => {
     const matchesSearch   = p.name.toLowerCase().includes(search.toLowerCase());
@@ -41,7 +56,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
           </p>
           <div style={{ display: 'flex', gap: '2.5rem', justifyContent: 'center', marginTop: '2rem', flexWrap: 'wrap' }}>
             <div>
-              <strong style={{ fontSize: '1.8rem', color: 'var(--accent-primary)' }}>142</strong><br/>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--accent-primary)' }}>{realViews !== null ? realViews : '-'}</strong><br/>
               <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scout Views</span>
             </div>
             <div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { generateReport } from './generateReport';
+import { supabase } from './supabaseClient';
 
 const getCredibilityBadge = (highlights = []) => {
   if (highlights.length >= 3) return { label: 'Rising Talent', color: 'var(--warning)', bg: 'var(--warning-bg)' };
@@ -30,13 +31,41 @@ const StatBar = ({ label, value }) => (
   </div>
 );
 
-const PlayerProfile = ({ player, onBack, onUploadClick, onGenerateReport }) => {
+const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGenerateReport }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Hooks must come before any early returns (Rules of Hooks)
   const reportTimerRef = useRef(null);
   useEffect(() => () => clearTimeout(reportTimerRef.current), []);
+
+  // TRACK REAL SCOUT VIEWS
+  const trackedPlayerId = useRef(null);
+
+  useEffect(() => {
+    if (!userRole || !viewerId || !player?.id) return;
+
+    if (userRole === 'scout' && player.user_id !== viewerId) {
+      if (trackedPlayerId.current === player.id) return;
+      
+      trackedPlayerId.current = player.id;
+
+      const trackView = async () => {
+        const { error } = await supabase.from('player_views').insert([{ 
+          player_id: player.id, 
+          scout_id: viewerId,
+          view_date: new Date().toISOString().split('T')[0]
+        }]);
+
+        if (error && error.code !== '23505') {
+          console.error('Unexpected error tracking scout view:', error);
+          trackedPlayerId.current = null; // reset on true failure
+        }
+      };
+
+      trackView();
+    }
+  }, [player?.id]);
 
   if (!player) return <div>Player not found</div>;
 

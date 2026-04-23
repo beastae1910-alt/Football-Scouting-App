@@ -21,7 +21,7 @@ const CompactCard = ({ player, onClick }) => (
     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
   >
     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
-      {player.name[0]?.toUpperCase() || '?'}
+      {player.name?.[0]?.toUpperCase() || '?'}
     </div>
     <div>
       <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.95rem' }}>{player.name}</h4>
@@ -32,6 +32,7 @@ const CompactCard = ({ player, onClick }) => (
 
 const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   const [filterPosition, setFilterPos] = useState('All');
+  const [filterAge, setFilterAge] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [topPlayers, setTopPlayers] = useState(null);
@@ -103,12 +104,19 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const filtered = (players || []).filter(p => {
     const matchesPos = filterPosition === 'All' || p.position === filterPosition;
+    const matchesAge =
+      filterAge === 'All'      ? true :
+      filterAge === 'Under 16' ? p.age <= 16 :
+      filterAge === 'Under 18' ? p.age <= 18 :
+      filterAge === 'Under 21' ? p.age <= 21 : true;
     const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
-    return matchesPos && matchesName;
+    return matchesPos && matchesAge && matchesName;
   });
 
-  // Keep filteredRef current on every render (no extra re-renders, no stale closure)
-  filteredRef.current = filtered;
+  // Keep filteredRef current without adding it to the search-tracking deps.
+  useEffect(() => {
+    filteredRef.current = filtered;
+  }, [filtered]);
 
   // ── Search impression tracking ──────────────────────────
   // Fires 400ms after scout stops typing.
@@ -205,6 +213,23 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
               <option key={pos} value={pos}>{pos}</option>
             ))}
           </select>
+
+          <select
+            value={filterAge}
+            onChange={(e) => setFilterAge(e.target.value)}
+            className="input-field"
+            style={{ width: 'auto', minWidth: '130px' }}
+          >
+            {['All', 'Under 16', 'Under 18', 'Under 21'].map((age) => (
+              <option key={age} value={age}>{age}</option>
+            ))}
+          </select>
+
+          {(searchQuery || filterPosition !== 'All' || filterAge !== 'All') && (
+            <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-secondary">
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
@@ -221,8 +246,8 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 0' }}>
           <p className="text-muted">No players match your filter.</p>
-          <button onClick={() => setFilterPos('All')} className="btn btn-ghost" style={{ marginTop: '1rem' }}>
-            Clear Filter
+          <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ marginTop: '1rem' }}>
+            Clear Filters
           </button>
         </div>
       ) : (

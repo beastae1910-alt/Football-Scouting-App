@@ -15,16 +15,19 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
   const [filterAge, setFilterAge]       = useState('All');
   const [realViews, setRealViews]             = useState(null);
   const [searchAppearances, setSearchApp]      = useState(null);
+  const [shortlistCount, setShortlistCount]    = useState(null);
 
   useEffect(() => {
     if (userRole !== 'player' || players.length === 0) return;
     let isMounted = true;
+    const playerId = players[0]?.id;
+    if (!playerId) return;
 
     const fetchViews = async () => {
       const { count, error } = await supabase
         .from('player_views')
         .select('*', { count: 'exact', head: true })
-        .eq('player_id', players[0].id);
+        .eq('player_id', playerId);
       if (!isMounted) return;
       if (!error) setRealViews(count || 0);
 
@@ -32,9 +35,16 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
       const { count: saCount, error: saError } = await supabase
         .from('player_search_views')
         .select('*', { count: 'exact', head: true })
-        .eq('player_id', players[0].id);
+        .eq('player_id', playerId);
       if (!isMounted) return;
       if (!saError) setSearchApp(saCount || 0);
+
+      const { count: interestCount, error: interestError } = await supabase
+        .from('scout_interests')
+        .select('*', { count: 'exact', head: true })
+        .eq('player_id', playerId);
+      if (!isMounted) return;
+      if (!interestError) setShortlistCount(interestCount || 0);
     };
 
     fetchViews();
@@ -42,7 +52,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
   }, [userRole, players]);
 
   const filtered = players.filter((p) => {
-    const matchesSearch   = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch   = (p.name || '').toLowerCase().includes(search.toLowerCase());
     const matchesPosition = filterPosition === 'All' || p.position === filterPosition;
     const matchesAge =
       filterAge === 'All'      ? true :
@@ -54,7 +64,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
   });
 
   const scrollToPlayers = () => {
-    document.getElementById('scout-dashboard').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('scout-dashboard')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -79,7 +89,11 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Search Appearances</span>
             </div>
             <div>
-              <strong style={{ fontSize: '1.8rem', color: 'var(--warning)' }}>{players[0].highlights?.length || 0}</strong><br/>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--warning)' }}>{shortlistCount !== null ? shortlistCount : '-'}</strong><br/>
+              <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scout Shortlists</span>
+            </div>
+            <div>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--accent-primary)' }}>{players[0].highlights?.length || 0}</strong><br/>
               <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Highlights</span>
             </div>
           </div>

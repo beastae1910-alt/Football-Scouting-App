@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 // SECURITY: Constants for rate limiting and validation
@@ -18,6 +18,7 @@ const Auth = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError]       = useState(null);
   const [success, setSuccess]   = useState(null);
+  const [lockoutRemaining, setLockoutRemaining] = useState(0);
 
   const attemptsRef    = useRef(0);
   const lockedUntilRef = useRef(null);
@@ -26,6 +27,18 @@ const Auth = () => {
     if (!lockedUntilRef.current) return 0;
     return Math.max(0, Math.ceil((lockedUntilRef.current - Date.now()) / 1000));
   };
+
+  useEffect(() => {
+    if (lockoutRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      const remaining = getRemainingLockout();
+      setLockoutRemaining(remaining);
+      if (remaining === 0) lockedUntilRef.current = null;
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lockoutRemaining]);
 
   // ── Google OAuth ───────────────────────────────────────────
   const handleGoogleLogin = async () => {
@@ -53,6 +66,7 @@ const Auth = () => {
     setSuccess(null);
 
     const remaining = getRemainingLockout();
+    setLockoutRemaining(remaining);
     if (remaining > 0) { setError(`Too many failed attempts. Try again in ${remaining}s.`); return; }
 
     if (!isValidEmail(email))      { setError('Please enter a valid email address.'); return; }
@@ -72,6 +86,7 @@ const Auth = () => {
       if (attemptsRef.current >= MAX_ATTEMPTS) {
         lockedUntilRef.current = Date.now() + LOCKOUT_MS;
         attemptsRef.current = 0;
+        setLockoutRemaining(Math.ceil(LOCKOUT_MS / 1000));
         setError('Too many failed attempts. Account locked for 30 seconds.');
       } else {
         const left = MAX_ATTEMPTS - attemptsRef.current;
@@ -82,6 +97,7 @@ const Auth = () => {
 
     attemptsRef.current = 0;
     lockedUntilRef.current = null;
+    setLockoutRemaining(0);
     if (mode === 'signup') setSuccess('Account created! Check your email to confirm, then sign in.');
   };
 
@@ -153,7 +169,7 @@ const Auth = () => {
           {error   && <p style={{ color: 'var(--danger)',  fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>}
           {success && <p style={{ color: 'var(--success)', fontSize: '0.85rem', marginBottom: '1rem' }}>{success}</p>}
 
-          <button type="submit" disabled={loading || getRemainingLockout() > 0} className="btn btn-primary"
+          <button type="submit" disabled={loading || lockoutRemaining > 0} className="btn btn-primary"
             style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', opacity: loading ? 0.7 : 1 }}>
             {loading
               ? (mode === 'login' ? 'Signing in...' : 'Creating account...')

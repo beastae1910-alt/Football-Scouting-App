@@ -10,6 +10,13 @@ const getCredibilityBadge = (highlights = []) => {
 
 const STAT_KEYS = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical'];
 
+const getStatsDraft = (stats = {}) =>
+  STAT_KEYS.reduce((draft, key) => {
+    const value = Number(stats?.[key]);
+    draft[key] = Number.isFinite(value) ? Math.min(100, Math.max(0, Math.round(value))) : 50;
+    return draft;
+  }, {});
+
 const StatBar = ({ label, value }) => (
   <div style={{ marginBottom: '1rem' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
@@ -31,13 +38,25 @@ const StatBar = ({ label, value }) => (
   </div>
 );
 
-const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGenerateReport }) => {
+const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGenerateReport, onSaveStats }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [statsDraft, setStatsDraft] = useState(() => getStatsDraft(player?.stats));
+  const [isSavingStats, setIsSavingStats] = useState(false);
+  const [statsError, setStatsError] = useState(null);
+  const [statsSaved, setStatsSaved] = useState(false);
+  const [isShortlisted, setIsShortlisted] = useState(false);
+  const [shortlistLoading, setShortlistLoading] = useState(false);
+  const [shortlistError, setShortlistError] = useState(null);
 
   // Hooks must come before any early returns (Rules of Hooks)
   const reportTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
   useEffect(() => () => clearTimeout(reportTimerRef.current), []);
+  useEffect(() => () => { isMountedRef.current = false; }, []);
+
+  const isOwnProfile = userRole === 'player' && player?.user_id === viewerId;
+  const isScout = userRole === 'scout';
 
   // TRACK REAL SCOUT VIEWS
   const trackedPlayerId = useRef(null);
@@ -65,7 +84,34 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
 
       trackView();
     }
-  }, [player?.id, userRole, viewerId]);
+  }, [player?.id, player?.user_id, userRole, viewerId]);
+
+  useEffect(() => {
+    if (!isScout || !viewerId || !player?.id) {
+      return;
+    }
+
+    let isCurrent = true;
+
+    const fetchShortlistStatus = async () => {
+      const { data, error } = await supabase
+        .from('scout_interests')
+        .select('id')
+        .eq('scout_id', viewerId)
+        .eq('player_id', player.id)
+        .maybeSingle();
+
+      if (!isCurrent || !isMountedRef.current) return;
+      if (error) {
+        console.error('Failed to fetch shortlist status:', error.message);
+        return;
+      }
+      setIsShortlisted(Boolean(data));
+    };
+
+    fetchShortlistStatus();
+    return () => { isCurrent = false; };
+  }, [isScout, player?.id, viewerId]);
 
   if (!player) return <div>Player not found</div>;
 
@@ -77,6 +123,53 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
       onGenerateReport(generateReport(player));
       setIsGenerating(false);
     }, 1200);
+  };
+
+  const handleStatChange = (key, value) => {
+    setStatsSaved(false);
+    setStatsError(null);
+    setStatsDraft((prev) => ({ ...prev, [key]: Number(value) }));
+  };
+
+  const handleSaveStats = async (e) => {
+    e.preventDefault();
+    if (!isOwnProfile || !onSaveStats) return;
+
+    setIsSavingStats(true);
+    setStatsError(null);
+    setStatsSaved(false);
+
+    try {
+      await onSaveStats(statsDraft);
+      if (!isMountedRef.current) return;
+      setStatsSaved(true);
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      setStatsError(err.message || 'Failed to save stats.');
+    } finally {
+      if (isMountedRef.current) setIsSavingStats(false);
+    }
+  };
+
+  const handleShortlist = async () => {
+    if (!isScout || !viewerId || !player?.id || isShortlisted) return;
+
+    setShortlistLoading(true);
+    setShortlistError(null);
+
+    const { error } = await supabase
+      .from('scout_interests')
+      .insert([{ scout_id: viewerId, player_id: player.id }]);
+
+    if (!isMountedRef.current) return;
+    if (error && error.code !== '23505') {
+      setShortlistError(error.message);
+      setShortlistLoading(false);
+      return;
+    }
+
+    setIsShortlisted(true);
+    setShortlistLoading(false);
   };
 
   return (
@@ -109,7 +202,18 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
           </p>
         </div>
 
-        {userRole !== 'scout' && (
+        {isScout && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+            <button onClick={handleShortlist} disabled={shortlistLoading || isShortlisted} className="btn btn-primary">
+              {isShortlisted ? 'Shortlisted' : (shortlistLoading ? 'Saving...' : '⭐ Shortlist')}
+            </button>
+            {shortlistError && (
+              <span style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{shortlistError}</span>
+            )}
+          </div>
+        )}
+
+        {isOwnProfile && (
           <button onClick={onUploadClick} className="btn btn-primary">
             Upload Highlight
           </button>
@@ -166,7 +270,35 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
               </span>
             </div>
 
-            {player.stats && Object.keys(player.stats).length > 0 ? (
+            {isOwnProfile ? (
+              <form onSubmit={handleSaveStats}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem 3rem' }}>
+                  {STAT_KEYS.map((key) => (
+                    <label key={key} style={{ display: 'block' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+                        <span className="text-muted" style={{ textTransform: 'capitalize', fontWeight: '500' }}>{key}</span>
+                        <strong>{statsDraft[key]}</strong>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={statsDraft[key]}
+                        onChange={(e) => handleStatChange(key, e.target.value)}
+                        style={{ width: '100%' }}
+                      />
+                    </label>
+                  ))}
+                </div>
+
+                {statsError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '1rem' }}>{statsError}</p>}
+                {statsSaved && <p style={{ color: 'var(--success)', fontSize: '0.85rem', marginTop: '1rem' }}>Stats saved.</p>}
+
+                <button type="submit" disabled={isSavingStats} className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
+                  {isSavingStats ? 'Saving...' : 'Save Stats'}
+                </button>
+              </form>
+            ) : player.stats && Object.keys(player.stats).length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '0 3rem' }}>
                 {STAT_KEYS.filter(k => player.stats[k] !== undefined).map(k => (
                   <StatBar key={k} label={k} value={player.stats[k]} />
@@ -187,7 +319,7 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
                 <div style={{ fontSize: '3rem', opacity: 0.5, marginBottom: '1rem' }}>🎥</div>
                 <h3 style={{ margin: '0 0 0.5rem' }}>No footage available</h3>
                 <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Upload game highlights to showcase this player's abilities.</p>
-                {userRole !== 'scout' && (
+                {isOwnProfile && (
                   <button onClick={onUploadClick} className="btn btn-primary">Upload Video</button>
                 )}
               </div>

@@ -168,7 +168,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       {players && players.length > 0 && searchQuery.trim().length === 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
           <div>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>🔥 Top Players</h3>
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', letterSpacing: '-0.02em' }}>Top Players</h3>
             {!topPlayers ? <p className="text-muted">Loading...</p> : topPlayers.length === 0 ? <p className="text-muted">No player activity yet</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 {topPlayers.map(p => <CompactCard key={p.id} player={p} onClick={onSelectPlayer} />)}
@@ -177,7 +177,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           </div>
 
           <div>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>👁️ Recently Viewed</h3>
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', letterSpacing: '-0.02em' }}>Recently Viewed</h3>
             {!recentPlayers ? <p className="text-muted">Loading...</p> : recentPlayers.length === 0 ? <p className="text-muted">No recent views</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 {recentPlayers.map(p => <CompactCard key={p.id} player={p} onClick={onSelectPlayer} />)}

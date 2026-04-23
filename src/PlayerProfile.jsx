@@ -18,21 +18,22 @@ const getStatsDraft = (stats = {}) =>
   }, {});
 
 const StatBar = ({ label, value }) => (
-  <div style={{ marginBottom: '1rem' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
-      <span className="text-muted" style={{ textTransform: 'capitalize', fontWeight: '500' }}>{label}</span>
+  <div style={{ marginBottom: '1.25rem' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+      <span className="text-muted" style={{ textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em', fontSize: '0.75rem' }}>{label}</span>
       <span style={{ 
-        fontWeight: '700', 
+        fontWeight: '800', 
         color: value > 80 ? 'var(--success)' : value < 65 ? 'var(--danger)' : 'var(--text-primary)' 
       }}>{value}</span>
     </div>
-    <div style={{ background: 'var(--bg-main)', borderRadius: '100px', height: '8px', border: '1px solid var(--border-color)' }}>
+    <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '100px', height: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
       <div style={{ 
         width: `${value}%`, 
         height: '100%', 
         borderRadius: '100px', 
-        background: value > 80 ? 'var(--success)' : value < 65 ? 'var(--danger)' : 'var(--accent-primary)', 
-        transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' 
+        background: `linear-gradient(90deg, ${value > 80 ? 'var(--success)' : value < 65 ? 'var(--danger)' : 'var(--accent-primary)'}, transparent 200%)`, 
+        boxShadow: `0 0 12px ${value > 80 ? 'rgba(16, 185, 129, 0.4)' : value < 65 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(59, 130, 246, 0.4)'}`,
+        transition: 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)' 
       }} />
     </div>
   </div>
@@ -205,7 +206,7 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
         {isScout && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
             <button onClick={handleShortlist} disabled={shortlistLoading || isShortlisted} className="btn btn-primary">
-              {isShortlisted ? 'Shortlisted' : (shortlistLoading ? 'Saving...' : '⭐ Shortlist')}
+              {isShortlisted ? 'Shortlisted' : (shortlistLoading ? 'Saving...' : 'Shortlist')}
             </button>
             {shortlistError && (
               <span style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{shortlistError}</span>
@@ -316,7 +317,9 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
           <div>
             {!player.highlights || player.highlights.length === 0 ? (
               <div className="card" style={{ textAlign: 'center', padding: '4rem 0' }}>
-                <div style={{ fontSize: '3rem', opacity: 0.5, marginBottom: '1rem' }}>🎥</div>
+                <div style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                </div>
                 <h3 style={{ margin: '0 0 0.5rem' }}>No footage available</h3>
                 <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Upload game highlights to showcase this player's abilities.</p>
                 {isOwnProfile && (

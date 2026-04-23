@@ -16,16 +16,20 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
   const [realViews, setRealViews]       = useState(null);
 
   useEffect(() => {
-    if (userRole === 'player' && players.length > 0) {
-      const fetchViews = async () => {
-        const { count } = await supabase
-          .from('player_views')
-          .select('*', { count: 'exact', head: true })
-          .eq('player_id', players[0].id);
-        setRealViews(count || 0);
-      };
-      fetchViews();
-    }
+    if (userRole !== 'player' || players.length === 0) return;
+    let isMounted = true;
+
+    const fetchViews = async () => {
+      const { count, error } = await supabase
+        .from('player_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('player_id', players[0].id);
+      if (!isMounted) return;
+      if (!error) setRealViews(count || 0);
+    };
+
+    fetchViews();
+    return () => { isMounted = false; };
   }, [userRole, players]);
 
   const filtered = players.filter((p) => {
@@ -60,7 +64,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scout Views</span>
             </div>
             <div>
-              <strong style={{ fontSize: '1.8rem', color: 'var(--success)' }}>18</strong><br/>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--success)' }}>—</strong><br/>
               <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Search Appearances</span>
             </div>
             <div>
@@ -202,9 +206,9 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
                   <span 
                     className="badge" 
                     style={{ 
-                      background: `${positionColors[player.position]}20` || 'rgba(255,255,255,0.1)', 
+                      background: positionColors[player.position] ? `${positionColors[player.position]}20` : 'rgba(255,255,255,0.1)', 
                       color: positionColors[player.position] || '#fff',
-                      border: `1px solid ${positionColors[player.position]}40`
+                      border: `1px solid ${positionColors[player.position] ? positionColors[player.position] : '#ffffff'}40`
                     }}
                   >
                     {player.position}

@@ -65,7 +65,7 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
 
       trackView();
     }
-  }, [player?.id]);
+  }, [player?.id, userRole, viewerId]);
 
   if (!player) return <div>Player not found</div>;
 
@@ -109,9 +109,11 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
           </p>
         </div>
 
-        <button onClick={onUploadClick} className="btn btn-primary">
-          Upload Highlight
-        </button>
+        {userRole !== 'scout' && (
+          <button onClick={onUploadClick} className="btn btn-primary">
+            Upload Highlight
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -185,7 +187,9 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
                 <div style={{ fontSize: '3rem', opacity: 0.5, marginBottom: '1rem' }}>🎥</div>
                 <h3 style={{ margin: '0 0 0.5rem' }}>No footage available</h3>
                 <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Upload game highlights to showcase this player's abilities.</p>
-                <button onClick={onUploadClick} className="btn btn-primary">Upload Video</button>
+                {userRole !== 'scout' && (
+                  <button onClick={onUploadClick} className="btn btn-primary">Upload Video</button>
+                )}
               </div>
             ) : (
               <div className="grid-cards">

@@ -38,18 +38,23 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   const [recentPlayers, setRecentPlayers] = useState(null);
 
   useEffect(() => {
-    const fetchScoutData = async () => {
-      if (!players || players.length === 0) return;
+    if (!players || players.length === 0) return;
+    let isMounted = true;
 
+    const fetchScoutData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || !isMounted) return;
 
       const playerMap = {};
       players.forEach(p => playerMap[p.id] = p);
 
       // 1. Top Players (Aggregate views)
-      const { data: allViews } = await supabase.from('player_views').select('player_id').limit(500);
-      if (allViews) {
+      const { data: allViews, error: viewsError } = await supabase.from('player_views').select('player_id').limit(500);
+      if (!isMounted) return;
+      if (viewsError) {
+        console.error('Failed to fetch top players:', viewsError.message);
+        setTopPlayers([]);
+      } else if (allViews) {
         const counts = {};
         allViews.forEach(v => { counts[v.player_id] = (counts[v.player_id] || 0) + 1; });
         const sortedIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 5);
@@ -58,14 +63,18 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       }
 
       // 2. Recently Viewed (Current Scout)
-      const { data: recentViews } = await supabase
+      const { data: recentViews, error: recentError } = await supabase
         .from('player_views')
         .select('player_id, viewed_at')
         .eq('scout_id', user.id)
         .order('viewed_at', { ascending: false })
-        .limit(50); // Fetch enough to deduplicate safely
+        .limit(50);
 
-      if (recentViews) {
+      if (!isMounted) return;
+      if (recentError) {
+        console.error('Failed to fetch recent views:', recentError.message);
+        setRecentPlayers([]);
+      } else if (recentViews) {
         const seen = new Set();
         const recent = [];
         for (const view of recentViews) {
@@ -80,9 +89,8 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       }
     };
 
-    if (players && players.length > 0) {
-      fetchScoutData();
-    }
+    fetchScoutData();
+    return () => { isMounted = false; };
   }, [players]);
 
   // 3. REAL SEARCH & Filter
@@ -191,9 +199,9 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
                 <span 
                   className="badge" 
                   style={{ 
-                    background: `${positionColors[player.position]}20` || 'rgba(255,255,255,0.1)', 
+                    background: positionColors[player.position] ? `${positionColors[player.position]}20` : 'rgba(255,255,255,0.1)', 
                     color: positionColors[player.position] || '#fff',
-                    border: `1px solid ${positionColors[player.position]}40`
+                    border: `1px solid ${positionColors[player.position] ? positionColors[player.position] : '#ffffff'}40`
                   }}
                 >
                   {player.position}

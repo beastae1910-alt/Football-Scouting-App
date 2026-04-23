@@ -1,16 +1,18 @@
-# React + Vite
+## ⚽ ScoutingXI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern football scouting platform built to surface hidden talent.
 
-Currently, two official plugins are available:
+ScoutingXI transforms raw player potential into structured, searchable profiles, enabling scouts to discover and evaluate players faster and more effectively.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Instead of relying on informal networks, the platform introduces real data, engagement tracking, and performance insights — making scouting merit-based and scalable.
 
-## React Compiler
+### 🌍 Why it matters
+Thousands of talented players go unnoticed due to lack of exposure. ScoutingXI bridges that gap by giving players visibility and scouts better tools to identify talent.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🚀 Core Features
+- Player profiles & highlight uploads  
+- Advanced search & filtering for scouts  
+- Real engagement metrics (views, shortlist interest)  
+- AI-powered insights  
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Built to bring structure, visibility, and fairness to football scouting.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 const positionColors = {
@@ -36,6 +36,12 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   
   const [topPlayers, setTopPlayers] = useState(null);
   const [recentPlayers, setRecentPlayers] = useState(null);
+
+  // ── Search tracking refs ────────────────────────────────
+  // filteredRef: always holds latest filtered list without adding it to effect deps
+  const filteredRef      = useRef([]);
+  // trackedSearches: session-level dedup — prevents re-inserting same (query, player) pair
+  const trackedSearches  = useRef(new Set()); // Set<"query:playerId">
 
   useEffect(() => {
     if (!players || players.length === 0) return;
@@ -100,6 +106,45 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
     const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
     return matchesPos && matchesName;
   });
+
+  // Keep filteredRef current on every render (no extra re-renders, no stale closure)
+  filteredRef.current = filtered;
+
+  // ── Search impression tracking ──────────────────────────
+  // Fires 400ms after scout stops typing.
+  // Inserts one row per visible player (capped at 10), skipping already-tracked pairs.
+  // ScoutDashboard only renders for scouts (enforced in App.jsx) — no role re-check needed.
+  useEffect(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return; // empty search → don't track
+
+    const timer = setTimeout(async () => {
+      const currentFiltered = filteredRef.current;
+      if (currentFiltered.length === 0) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const toInsert = currentFiltered
+        .slice(0, 10) // cap at 10 — avoid bulk inserts on large result sets
+        .filter(p => !trackedSearches.current.has(`${query}:${p.id}`))
+        .map(p => ({ player_id: p.id, scout_id: user.id, query }));
+
+      if (toInsert.length === 0) return;
+
+      // Mark optimistically before insert — prevents double-fire on re-renders
+      toInsert.forEach(r => trackedSearches.current.add(`${r.query}:${r.player_id}`));
+
+      const { error } = await supabase.from('player_search_views').insert(toInsert);
+      if (error) {
+        console.error('Search tracking error:', error.message);
+        // Roll back session cache so a retry is possible on next search
+        toInsert.forEach(r => trackedSearches.current.delete(`${r.query}:${r.player_id}`));
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]); // only re-fires when query text changes
 
   return (
     <div className="container animate-fade-in" style={{ paddingTop: '2rem' }}>

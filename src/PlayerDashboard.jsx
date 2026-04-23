@@ -13,7 +13,8 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
   const [search, setSearch]             = useState('');
   const [filterPosition, setFilterPos]  = useState('All');
   const [filterAge, setFilterAge]       = useState('All');
-  const [realViews, setRealViews]       = useState(null);
+  const [realViews, setRealViews]             = useState(null);
+  const [searchAppearances, setSearchApp]      = useState(null);
 
   useEffect(() => {
     if (userRole !== 'player' || players.length === 0) return;
@@ -26,6 +27,14 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
         .eq('player_id', players[0].id);
       if (!isMounted) return;
       if (!error) setRealViews(count || 0);
+
+      // Fetch real search appearance count from new table
+      const { count: saCount, error: saError } = await supabase
+        .from('player_search_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('player_id', players[0].id);
+      if (!isMounted) return;
+      if (!saError) setSearchApp(saCount || 0);
     };
 
     fetchViews();
@@ -64,7 +73,9 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scout Views</span>
             </div>
             <div>
-              <strong style={{ fontSize: '1.8rem', color: 'var(--success)' }}>—</strong><br/>
+              <strong style={{ fontSize: '1.8rem', color: 'var(--success)' }}>
+                {searchAppearances !== null ? searchAppearances : '—'}
+              </strong><br/>
               <span className="text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Search Appearances</span>
             </div>
             <div>

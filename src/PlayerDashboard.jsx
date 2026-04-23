@@ -203,7 +203,9 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
         {/* Player Cards */}
         {players.length === 0 ? (
           <div className="card" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
+            <div style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+            </div>
             <h3 style={{ marginBottom: '0.5rem' }}>No players yet.</h3>
             <p className="text-muted" style={{ marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
               {userRole === 'scout'

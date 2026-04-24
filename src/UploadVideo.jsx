@@ -35,15 +35,22 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
 
     setVideoFile(file);
     // BUG FIX: Revoke previous blob URL before creating a new one to prevent memory leak
-    setVideoURL((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
+    const newUrl = URL.createObjectURL(file);
+    setVideoURL((prev) => { 
+      if (prev) URL.revokeObjectURL(prev); 
+      return newUrl;
+    });
     setUploadError(null);
   };
 
   // BUG FIX: Revoke blob URL when component unmounts
   useEffect(() => {
-    return () => { if (videoURL) URL.revokeObjectURL(videoURL); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => { 
+      if (videoURL) {
+        URL.revokeObjectURL(videoURL);
+      }
+    };
+  }, [videoURL]);
 
   const handleUpload = async () => {
     if (!videoFile) return;

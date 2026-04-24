@@ -29,7 +29,7 @@ const StatBar = ({ label, value }) => {
     <div style={{ marginBottom: '1.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.25rem' }}>
         <span className="text-muted" style={{ textTransform: 'uppercase', fontFamily: 'var(--font-sport)', letterSpacing: '1px', fontSize: '1.25rem', lineHeight: 1 }}>{label}</span>
-        <span style={{ fontFamily: 'var(--font-sport)', fontSize: '2rem', lineHeight: 1, color }}>{value}</span>
+        <span style={{ fontFamily: 'var(--font-sport)', fontSize: '2rem', lineHeight: 1, color, transition: 'all 0.3s ease' }}>{value}</span>
       </div>
       <div style={{ background: 'var(--bg-darkest)', borderRadius: '2px', height: '12px', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
         <div style={{ 
@@ -170,7 +170,7 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
     setShortlistLoading(false);
   };
 
-  return (
+return (
     <div className="container animate-up">
       <button onClick={onBack} className="btn btn-ghost" style={{ marginBottom: '1.5rem', padding: '0.5rem 0' }}>
         &larr; BACK TO DASHBOARD
@@ -218,7 +218,37 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
         )}
       </div>
 
-      {/* TABS */}
+        <div style={{ flex: 1, minWidth: '250px' }}>
+          <h1 className="hero-title-giant" style={{ wordBreak: 'break-word' }}>{player.name}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <span className={`badge ${getPosClass(player.position)}`} style={{ fontSize: '1.25rem', padding: '0.25rem 1rem' }}>
+              {player.position}
+            </span>
+            <span style={{ fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-secondary)' }}>
+              AGE {player.age} {player.city ? `// ${player.city}` : ''}
+            </span>
+          </div>
+        </div>
+
+        {isScout && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+            <button onClick={handleShortlist} disabled={shortlistLoading || isShortlisted} className={isShortlisted ? 'btn btn-secondary' : 'btn btn-primary'}>
+              {isShortlisted ? 'SHORTLISTED' : (shortlistLoading ? 'SAVING...' : 'SHORTLIST PLAYER')}
+            </button>
+            {shortlistError && (
+              <span style={{ color: 'var(--alert-red)', fontSize: '0.8rem', fontFamily: 'var(--font-ui)', fontWeight: 700 }}>{shortlistError}</span>
+            )}
+          </div>
+        )}
+
+        {isOwnProfile && (
+          <button onClick={onUploadClick} className="btn btn-primary">
+            UPLOAD HIGHLIGHT
+          </button>
+        )}
+      </div>
+
+{/* TABS */}
       <div className="sport-tabs">
         <button className={`sport-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>OVERVIEW</button>
         <button className={`sport-tab ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>ATTRIBUTES</button>

@@ -23,7 +23,7 @@ function App() {
   const selectedPlayer = players.find((p) => p.id === selectedId) || null;
   const effectiveRole = profile?.role || user?.user_metadata?.role || null;
 
-  // ── Auth listener ──────────────────────────────────────────
+// ── Auth listener ──────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
 
@@ -38,7 +38,9 @@ function App() {
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (isMounted) {
+        setUser(session?.user ?? null);
+      }
     });
 
     return () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './supabaseClient';
 
 const getPosClass = (pos) => {
@@ -12,21 +12,22 @@ const getPosClass = (pos) => {
 const getCardAccent = (pos) => {
   if (pos === 'Forward') return 'orange-accent';
   if (pos === 'Midfielder' || pos === 'Winger') return 'gold-accent';
-  return ''; // default green
+  if (pos === 'Goalkeeper') return 'red-accent';
+  return 'green-accent';
 };
 
 const CompactCard = ({ player, onClick }) => (
   <div 
     className={`sport-card ${getCardAccent(player.position)}`}
     onClick={() => onClick(player)} 
-    style={{ cursor: 'pointer', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}
+    style={{ cursor: 'pointer', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.3s ease', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}
   >
-    <div style={{ width: '48px', height: '48px', borderRadius: '4px', background: 'var(--bg-dark)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-main)' }}>
+    <div style={{ width: '48px', height: '48px', borderRadius: '4px', background: 'var(--bg-dark)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-main)', transition: 'all 0.2s ease' }}>
       {player.name?.[0]?.toUpperCase() || '?'}
     </div>
     <div style={{ flex: 1 }}>
-      <h4 style={{ margin: '0 0 0.1rem', fontSize: '1.2rem', fontFamily: 'var(--font-ui)', fontWeight: 700, textTransform: 'none', letterSpacing: 0 }}>{player.name}</h4>
-      <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{player.position}</span>
+      <h4 style={{ margin: '0 0 0.1rem', fontSize: '1.2rem', fontFamily: 'var(--font-ui)', fontWeight: 700, textTransform: 'none', letterSpacing: 0, transition: 'all 0.2s ease' }}>{player.name}</h4>
+      <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', transition: 'all 0.2s ease' }}>{player.position}</span>
     </div>
   </div>
 );
@@ -138,7 +139,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  return (
+return (
     <div className="container animate-up" style={{ paddingTop: '2rem' }}>
       
       <div className="hero-block" style={{ padding: '3rem 2rem', marginBottom: '3rem' }}>
@@ -152,7 +153,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '3rem', marginBottom: '4rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--pitch-green)' }}>HOT PROSPECTS</h3>
+              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.5rem', color: 'var(--pitch-green)' }}>HOT PROSPECTS</h3>
             </div>
             {!topPlayers ? <p className="text-muted">Loading...</p> : topPlayers.length === 0 ? <p className="text-muted">No activity yet</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -163,7 +164,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--amber-gold)' }}>RECENTLY SCOUTED</h3>
+              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.5rem', color: 'var(--amber-gold)' }}>RECENTLY SCOUTED</h3>
             </div>
             {!recentPlayers ? <p className="text-muted">Loading...</p> : recentPlayers.length === 0 ? <p className="text-muted">No recent views</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -174,8 +175,8 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
         </div>
       )}
 
-      <div style={{ background: 'var(--bg-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '3rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, fontSize: '1.5rem', flex: '1 1 100%' }}>PLAYER DATABASE</h3>
+      <div style={{ background: 'var(--bg-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '3rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+        <h3 style={{ margin: '0 0 1.5rem', fontSize: '1.5rem', flex: '1 1 100%' }}>PLAYER DATABASE</h3>
         
         <input
           type="text"

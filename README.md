@@ -1,1 +1,5 @@
-I’m building ScoutingXI to solve a real problem of visibility in football scouting. So many gifted players are overlooked because they lack the connections to show their skills in organised settings or be discovered by professional scouts. Profiles can be created, highlights uploaded and credibility built on this platform by players while scouts can find talent by search, filters, engagement signals and AI-powered insights. The aim is to make scouting more efficient, more equitable and more data-led, especially for players coming from grassroots and underserved football communities.
+ScoutingXI is a football scouting platform which helps to discover hidden talent. In numerous grassroots football communities, talented players may be overlooked due to lack of access to the right opportunities or scouts. This app is the fix by allowing players to make profiles, upload highlights and showcase their game in a clean, professional manner.
+
+ScoutingXI combines Search, filters, shortlist tools and real engagement signals to make talent discovery faster and more efficient for scouts. It takes raw football talent and turns it into structured, actionable data.
+
+The goal is to make scouting more transparent, more merit-based and more data-driven, while giving young players a real chance to be seen.

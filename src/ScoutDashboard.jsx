@@ -1,26 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
-const positionColors = {
-  Forward:    '#F97316', // Orange
-  Midfielder: '#F59E0B', // Gold
-  Winger:     '#EAB308', // Yellow
-  Goalkeeper: '#EF4444', // Red
-  Defender:   '#10B981', // Green
+const getPosClass = (pos) => {
+  if (pos === 'Forward') return 'badge-orange';
+  if (pos === 'Midfielder') return 'badge-gold';
+  if (pos === 'Winger') return 'badge-gold';
+  if (pos === 'Goalkeeper') return 'badge-red';
+  return 'badge-green'; // Defender
+};
+
+const getCardAccent = (pos) => {
+  if (pos === 'Forward') return 'orange-accent';
+  if (pos === 'Midfielder' || pos === 'Winger') return 'gold-accent';
+  return ''; // default green
 };
 
 const CompactCard = ({ player, onClick }) => (
   <div 
-    className="card" 
+    className={`sport-card ${getCardAccent(player.position)}`}
     onClick={() => onClick(player)} 
     style={{ cursor: 'pointer', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}
   >
-    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+    <div style={{ width: '48px', height: '48px', borderRadius: '4px', background: 'var(--bg-dark)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-main)' }}>
       {player.name?.[0]?.toUpperCase() || '?'}
     </div>
-    <div>
-      <h4 style={{ margin: '0 0 0.2rem', fontSize: '0.95rem' }}>{player.name}</h4>
-      <span className="text-muted" style={{ fontSize: '0.8rem' }}>{player.position}</span>
+    <div style={{ flex: 1 }}>
+      <h4 style={{ margin: '0 0 0.1rem', fontSize: '1.2rem', fontFamily: 'var(--font-ui)', fontWeight: 700, textTransform: 'none', letterSpacing: 0 }}>{player.name}</h4>
+      <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{player.position}</span>
     </div>
   </div>
 );
@@ -55,7 +61,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       } else if (allViews) {
         const counts = {};
         allViews.forEach(v => { counts[v.player_id] = (counts[v.player_id] || 0) + 1; });
-        const sortedIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 5);
+        const sortedIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 4);
         const top = sortedIds.map(id => playerMap[id]).filter(Boolean);
         setTopPlayers(top);
       }
@@ -79,7 +85,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
             seen.add(view.player_id);
             const p = playerMap[view.player_id];
             if (p) recent.push(p);
-            if (recent.length >= 5) break;
+            if (recent.length >= 4) break;
           }
         }
         setRecentPlayers(recent);
@@ -126,41 +132,41 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
       toInsert.forEach(r => trackedSearches.current.add(`${r.query}:${r.player_id}`));
 
-      const { error } = await supabase.from('player_search_views').insert(toInsert);
-      if (error) {
-        console.error('Search tracking error:', error.message);
-        toInsert.forEach(r => trackedSearches.current.delete(`${r.query}:${r.player_id}`));
-      }
+      await supabase.from('player_search_views').insert(toInsert);
     }, 400);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   return (
-    <div className="container animate-fade-in" style={{ paddingTop: '2rem' }}>
+    <div className="container animate-up" style={{ paddingTop: '2rem' }}>
       
-      <div className="hero-section" style={{ padding: '2rem 1rem', marginBottom: '2rem', borderBottom: 'none' }}>
-        <h1 className="hero-title" style={{ fontSize: '2.5rem' }}>Scout Dashboard</h1>
-        <p className="hero-subtitle">
-          Discover talented players and analyze their performance.
+      <div className="hero-block" style={{ padding: '3rem 2rem', marginBottom: '3rem' }}>
+        <h1 className="hero-title-giant" style={{ color: 'var(--pitch-green)' }}>SCOUT<br/><span style={{ color: 'var(--text-main)' }}>COMMAND</span></h1>
+        <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '500px', margin: '1rem 0 0' }}>
+          Real-time discovery engine. Analyze player performance, track potential, and build your roster.
         </p>
       </div>
 
       {players && players.length > 0 && searchQuery.trim().length === 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '3rem', marginBottom: '4rem' }}>
           <div>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', letterSpacing: '-0.02em' }}>Top Players</h3>
-            {!topPlayers ? <p className="text-muted">Loading...</p> : topPlayers.length === 0 ? <p className="text-muted">No player activity yet</p> : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--pitch-green)' }}>HOT PROSPECTS</h3>
+            </div>
+            {!topPlayers ? <p className="text-muted">Loading...</p> : topPlayers.length === 0 ? <p className="text-muted">No activity yet</p> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {topPlayers.map(p => <CompactCard key={p.id} player={p} onClick={onSelectPlayer} />)}
               </div>
             )}
           </div>
 
           <div>
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', letterSpacing: '-0.02em' }}>Recently Viewed</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--amber-gold)' }}>RECENTLY SCOUTED</h3>
+            </div>
             {!recentPlayers ? <p className="text-muted">Loading...</p> : recentPlayers.length === 0 ? <p className="text-muted">No recent views</p> : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {recentPlayers.map(p => <CompactCard key={p.id} player={p} onClick={onSelectPlayer} />)}
               </div>
             )}
@@ -168,100 +174,87 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <p className="text-muted" style={{ margin: 0 }}>
-          Showing {filtered.length} of {players?.length || 0} players
-        </p>
+      <div style={{ background: 'var(--bg-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '3rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+        <h3 style={{ margin: 0, fontSize: '1.5rem', flex: '1 1 100%' }}>PLAYER DATABASE</h3>
         
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            placeholder="Search players by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field"
-            style={{ width: '250px' }}
-          />
+        <input
+          type="text"
+          placeholder="SEARCH PLAYERS..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="input-field"
+          style={{ flex: '1 1 250px', textTransform: 'uppercase', fontWeight: 600 }}
+        />
 
-          <select
-            value={filterPosition}
-            onChange={(e) => setFilterPos(e.target.value)}
-            className="input-field"
-            style={{ width: 'auto', minWidth: '150px' }}
-          >
-            {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
-              <option key={pos} value={pos}>{pos}</option>
-            ))}
-          </select>
+        <select
+          value={filterPosition}
+          onChange={(e) => setFilterPos(e.target.value)}
+          className="input-field"
+          style={{ width: 'auto', minWidth: '160px', textTransform: 'uppercase', fontWeight: 600 }}
+        >
+          {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
+            <option key={pos} value={pos}>{pos}</option>
+          ))}
+        </select>
 
-          <select
-            value={filterAge}
-            onChange={(e) => setFilterAge(e.target.value)}
-            className="input-field"
-            style={{ width: 'auto', minWidth: '130px' }}
-          >
-            {['All', 'Under 16', 'Under 18', 'Under 21'].map((age) => (
-              <option key={age} value={age}>{age}</option>
-            ))}
-          </select>
+        <select
+          value={filterAge}
+          onChange={(e) => setFilterAge(e.target.value)}
+          className="input-field"
+          style={{ width: 'auto', minWidth: '140px', textTransform: 'uppercase', fontWeight: 600 }}
+        >
+          {['All', 'Under 16', 'Under 18', 'Under 21'].map((age) => (
+            <option key={age} value={age}>{age}</option>
+          ))}
+        </select>
 
-          {(searchQuery || filterPosition !== 'All' || filterAge !== 'All') && (
-            <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-secondary">
-              Clear
-            </button>
-          )}
-        </div>
+        {(searchQuery || filterPosition !== 'All' || filterAge !== 'All') && (
+          <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ padding: '0.75rem' }}>
+            RESET
+          </button>
+        )}
       </div>
 
       {players === null ? (
-        <div style={{ textAlign: 'center', padding: '5rem 1rem', color: 'var(--text-secondary)' }}>
-          Loading players...
+        <div style={{ textAlign: 'center', padding: '5rem 1rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-sport)', fontSize: '2rem' }}>
+          LOADING DATABASE...
         </div>
       ) : players.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
-          <div style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-          </div>
-          <h3 style={{ marginBottom: '0.5rem' }}>No players yet.</h3>
-          <p className="text-muted">No players available yet. Check back later.</p>
+        <div className="sport-card" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+          <h3 style={{ marginBottom: '0.5rem', fontSize: '2rem' }}>NO PLAYERS REGISTERED</h3>
+          <p className="text-muted">The database is currently empty.</p>
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 0' }}>
-          <p className="text-muted">No players match your filter.</p>
-          <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ marginTop: '1rem' }}>
-            Clear Filters
+          <h3 style={{ color: 'var(--text-dim)' }}>0 RESULTS FOUND</h3>
+          <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-primary" style={{ marginTop: '1rem' }}>
+            CLEAR FILTERS
           </button>
         </div>
       ) : (
-        <div className="grid-cards">
+        <div className="roster-grid">
           {filtered.map((player) => (
             <div 
               key={player.id} 
-              className="card" 
+              className={`sport-card ${getCardAccent(player.position)}`}
               style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
               onClick={() => onSelectPlayer(player)}
             >
-              <div style={{ marginBottom: '1rem' }}>
-                <span 
-                  className="badge" 
-                  style={{ 
-                    background: positionColors[player.position] ? `${positionColors[player.position]}15` : 'rgba(255,255,255,0.05)', 
-                    color: positionColors[player.position] || '#fff',
-                    border: `1px solid ${positionColors[player.position] ? positionColors[player.position] : '#ffffff'}40`
-                  }}
-                >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <span className={`badge ${getPosClass(player.position)}`}>
                   {player.position}
+                </span>
+                <span style={{ fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-dim)', lineHeight: 1 }}>
+                  AGE {player.age}
                 </span>
               </div>
 
-              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem' }}>{player.name}</h3>
+              <h3 style={{ margin: '0 0 0.5rem', fontSize: '2.5rem', lineHeight: 1, wordBreak: 'break-word' }}>{player.name}</h3>
 
-              <div className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem', flex: 1 }}>
-                <span>Age {player.age}</span>
-              </div>
+              <div style={{ flex: 1, marginBottom: '2rem' }}></div>
 
               <button className="btn btn-secondary" style={{ width: '100%', pointerEvents: 'none' }}>
-                View Profile
+                VIEW PROFILE
               </button>
             </div>
           ))}

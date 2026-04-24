@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { generateReport } from './generateReport';
 import { supabase } from './supabaseClient';
 
-const getCredibilityBadge = (highlights = []) => {
-  if (highlights.length >= 3) return { label: 'Rising Talent', color: 'var(--warning)', bg: 'var(--warning-bg)' };
-  if (highlights.length >= 1) return { label: 'Active Player', color: 'var(--text-primary)', bg: 'var(--bg-surface)' };
-  return { label: 'New Player', color: 'var(--text-secondary)', bg: 'transparent' };
+const getPosClass = (pos) => {
+  if (pos === 'Forward') return 'badge-orange';
+  if (pos === 'Midfielder') return 'badge-gold';
+  if (pos === 'Winger') return 'badge-gold';
+  if (pos === 'Goalkeeper') return 'badge-red';
+  return 'badge-green';
 };
 
 const STAT_KEYS = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical'];
@@ -18,25 +20,24 @@ const getStatsDraft = (stats = {}) =>
   }, {});
 
 const StatBar = ({ label, value }) => {
-  const isHigh = value > 80;
+  const isHigh = value >= 80;
   const isLow = value < 65;
-  const color = isHigh ? 'var(--success)' : isLow ? 'var(--danger)' : 'var(--accent-gold)';
-  const shadowColor = isHigh ? 'rgba(16, 185, 129, 0.4)' : isLow ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.4)';
+  const color = isHigh ? 'var(--pitch-green)' : isLow ? 'var(--alert-red)' : 'var(--amber-gold)';
+  const shadowColor = isHigh ? 'var(--shadow-green)' : isLow ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'var(--shadow-gold)';
 
   return (
-    <div style={{ marginBottom: '1.25rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-        <span className="text-muted" style={{ textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em', fontSize: '0.75rem' }}>{label}</span>
-        <span style={{ fontWeight: '700', color }}>{value}</span>
+    <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.25rem' }}>
+        <span className="text-muted" style={{ textTransform: 'uppercase', fontFamily: 'var(--font-sport)', letterSpacing: '1px', fontSize: '1.25rem', lineHeight: 1 }}>{label}</span>
+        <span style={{ fontFamily: 'var(--font-sport)', fontSize: '2rem', lineHeight: 1, color }}>{value}</span>
       </div>
-      <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '100px', height: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ background: 'var(--bg-darkest)', borderRadius: '2px', height: '12px', overflow: 'hidden', border: '1px solid var(--border-light)' }}>
         <div style={{ 
           width: `${value}%`, 
           height: '100%', 
-          borderRadius: '100px', 
-          background: `linear-gradient(90deg, ${color}, transparent 200%)`, 
-          boxShadow: `0 0 12px ${shadowColor}`,
-          transition: 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)' 
+          background: color, 
+          boxShadow: shadowColor,
+          transition: 'width 1s cubic-bezier(0.25, 1, 0.5, 1)' 
         }} />
       </div>
     </div>
@@ -69,7 +70,6 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
 
     if (userRole === 'scout' && player.user_id !== viewerId) {
       if (trackedPlayerId.current === player.id) return;
-      
       trackedPlayerId.current = player.id;
 
       const trackView = async () => {
@@ -90,10 +90,7 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
   }, [player?.id, player?.user_id, userRole, viewerId]);
 
   useEffect(() => {
-    if (!isScout || !viewerId || !player?.id) {
-      return;
-    }
-
+    if (!isScout || !viewerId || !player?.id) return;
     let isCurrent = true;
 
     const fetchShortlistStatus = async () => {
@@ -117,8 +114,6 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
   }, [isScout, player?.id, viewerId]);
 
   if (!player) return <div>Player not found</div>;
-
-  const badge = getCredibilityBadge(player.highlights);
 
   const generateReportText = () => {
     setIsGenerating(true);
@@ -176,104 +171,104 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
   };
 
   return (
-    <div className="container animate-fade-in">
+    <div className="container animate-up">
       <button onClick={onBack} className="btn btn-ghost" style={{ marginBottom: '1.5rem', padding: '0.5rem 0' }}>
-        &larr; Back to Dashboard
+        &larr; BACK TO DASHBOARD
       </button>
 
-      <div className="card" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+      {/* ATHLETIC HERO SECTION */}
+      <div className="hero-block" style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
         <div style={{ 
-          width: '80px', height: '80px', borderRadius: '50%', 
-          background: 'var(--bg-main)', border: '1px solid var(--border-color)',
+          width: '120px', height: '120px', borderRadius: '4px', 
+          background: 'var(--bg-darkest)', border: '2px solid var(--border-light)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)' 
+          fontFamily: 'var(--font-sport)', fontSize: '5rem', color: 'var(--text-main)',
+          boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)'
         }}>
           {player.name?.[0]?.toUpperCase() || '?'}
         </div>
 
-        <div style={{ flex: 1, minWidth: '200px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
-            <h1 style={{ margin: 0, fontSize: '1.75rem' }}>{player.name}</h1>
-            <span className="badge" style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.color === 'var(--text-secondary)' ? 'var(--border-color)' : badge.color + '40'}` }}>
-              {badge.label}
+        <div style={{ flex: 1, minWidth: '250px' }}>
+          <h1 className="hero-title-giant" style={{ wordBreak: 'break-word' }}>{player.name}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <span className={`badge ${getPosClass(player.position)}`} style={{ fontSize: '1.25rem', padding: '0.25rem 1rem' }}>
+              {player.position}
+            </span>
+            <span style={{ fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-secondary)' }}>
+              AGE {player.age} {player.city ? `// ${player.city}` : ''}
             </span>
           </div>
-          <p className="text-muted" style={{ margin: 0, fontSize: '0.95rem' }}>
-            {player.position} &middot; Age {player.age}{player.city ? ` \u00b7 ${player.city}` : ''}
-          </p>
         </div>
 
         {isScout && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
             <button onClick={handleShortlist} disabled={shortlistLoading || isShortlisted} className={isShortlisted ? 'btn btn-secondary' : 'btn btn-primary'}>
-              {isShortlisted ? 'Shortlisted' : (shortlistLoading ? 'Saving...' : 'Shortlist')}
+              {isShortlisted ? 'SHORTLISTED' : (shortlistLoading ? 'SAVING...' : 'SHORTLIST PLAYER')}
             </button>
             {shortlistError && (
-              <span style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{shortlistError}</span>
+              <span style={{ color: 'var(--alert-red)', fontSize: '0.8rem', fontFamily: 'var(--font-ui)', fontWeight: 700 }}>{shortlistError}</span>
             )}
           </div>
         )}
 
         {isOwnProfile && (
-          <button onClick={onUploadClick} className="btn btn-secondary">
-            Upload Highlight
+          <button onClick={onUploadClick} className="btn btn-primary">
+            UPLOAD HIGHLIGHT
           </button>
         )}
       </div>
 
-      <div className="tabs-container">
-        <button className={`tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>Overview</button>
-        <button className={`tab ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>Stats</button>
-        <button className={`tab ${activeTab === 'highlights' ? 'active' : ''}`} onClick={() => setActiveTab('highlights')}>
-          Highlights <span className="badge" style={{ marginLeft: '0.5rem', background: 'var(--bg-main)' }}>{player.highlights?.length || 0}</span>
+      {/* TABS */}
+      <div className="sport-tabs">
+        <button className={`sport-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>OVERVIEW</button>
+        <button className={`sport-tab ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>ATTRIBUTES</button>
+        <button className={`sport-tab ${activeTab === 'highlights' ? 'active' : ''}`} onClick={() => setActiveTab('highlights')}>
+          HIGHLIGHTS <span className="badge badge-neutral" style={{ marginLeft: '0.5rem', fontSize: '1rem' }}>{player.highlights?.length || 0}</span>
         </button>
       </div>
 
-      <div className="animate-fade-in" key={activeTab}>
+      <div className="animate-up" key={activeTab}>
         {activeTab === 'overview' && (
-          <div className="card" style={{ padding: '2rem' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Biography</h3>
-            <p className="text-muted" style={{ marginBottom: '2.5rem', lineHeight: '1.7' }}>
-              {player.bio || `${player.name} is a ${player.age}-year-old ${player.position} registered on ScoutIndia. Review their stats and highlights to evaluate their potential.`}
+          <div className="sport-card" style={{ padding: '2.5rem' }}>
+            <h3 style={{ marginBottom: '1rem' }}>BIOGRAPHY</h3>
+            <p className="text-muted" style={{ marginBottom: '3rem', fontSize: '1.1rem' }}>
+              {player.bio || `${player.name} is a ${player.age}-year-old ${player.position} registered on ScoutIndia. Review their stats and highlights to evaluate their potential on the pitch.`}
             </p>
 
-            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a2 2 0 0 1 2 2c-.11.88-.45 1.71-1 2.45-.63.83-1.46 1.49-2.45 1.95a2 2 0 0 1-2.9-1.39A7.95 7.95 0 0 1 12 2Z"/><path d="M4 14a8 8 0 0 0 16 0"/><path d="M10 20v2"/><path d="M14 20v2"/><path d="M12 22v-6"/></svg>
-                  AI Scouting Report
+            <div style={{ background: 'var(--bg-dark)', borderLeft: '4px solid var(--pitch-green)', padding: '2rem', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--pitch-green)', fontSize: '1.75rem' }}>
+                  AI SCOUTING REPORT
                 </h4>
                 {!player.ai_report && (
-                  <button onClick={generateReportText} disabled={isGenerating} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                    {isGenerating ? 'Analyzing Data...' : 'Generate'}
+                  <button onClick={generateReportText} disabled={isGenerating} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
+                    {isGenerating ? 'ANALYZING...' : 'GENERATE REPORT'}
                   </button>
                 )}
               </div>
               
-              <p style={{ margin: 0, color: player.ai_report ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                {player.ai_report || 'No analysis generated yet. Click generate to evaluate player potential based on statistics.'}
+              <p style={{ margin: 0, color: player.ai_report ? 'var(--text-main)' : 'var(--text-dim)', fontSize: '1.05rem', lineHeight: '1.8' }}>
+                {player.ai_report || 'No analysis generated yet. Click generate to evaluate player potential based on available statistics and footage.'}
               </p>
             </div>
           </div>
         )}
 
         {activeTab === 'stats' && (
-          <div className="card" style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Performance Attributes</h3>
-              <span className="badge" style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                Self-Reported
-              </span>
+          <div className="sport-card" style={{ padding: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+              <h3 style={{ margin: 0 }}>PERFORMANCE ATTRIBUTES</h3>
+              <span className="badge badge-neutral">SELF-REPORTED</span>
             </div>
 
             {isOwnProfile ? (
               <form onSubmit={handleSaveStats}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem 3rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem 4rem' }}>
                   {STAT_KEYS.map((key) => (
                     <label key={key} style={{ display: 'block' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                        <span className="text-muted" style={{ textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em', fontSize: '0.75rem' }}>{key}</span>
-                        <strong>{statsDraft[key]}</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.5rem' }}>
+                        <span className="text-muted" style={{ textTransform: 'uppercase', fontFamily: 'var(--font-sport)', fontSize: '1.25rem', letterSpacing: '1px' }}>{key}</span>
+                        <strong style={{ fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--pitch-green)' }}>{statsDraft[key]}</strong>
                       </div>
                       <input
                         type="range"
@@ -281,30 +276,30 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
                         max="100"
                         value={statsDraft[key]}
                         onChange={(e) => handleStatChange(key, e.target.value)}
-                        style={{ width: '100%' }}
+                        style={{ width: '100%', accentColor: 'var(--pitch-green)' }}
                       />
                     </label>
                   ))}
                 </div>
 
-                {statsError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '1rem' }}>{statsError}</p>}
-                {statsSaved && <p style={{ color: 'var(--success)', fontSize: '0.85rem', marginTop: '1rem' }}>Stats saved.</p>}
+                {statsError && <p style={{ color: 'var(--alert-red)', fontSize: '0.95rem', marginTop: '1.5rem', fontWeight: 600 }}>{statsError}</p>}
+                {statsSaved && <p style={{ color: 'var(--pitch-green)', fontSize: '0.95rem', marginTop: '1.5rem', fontWeight: 600 }}>ATTRIBUTES SAVED SUCCESSFULLY.</p>}
 
-                <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border-light)' }}>
                   <button type="submit" disabled={isSavingStats} className="btn btn-primary">
-                    {isSavingStats ? 'Saving...' : 'Save Attributes'}
+                    {isSavingStats ? 'SAVING...' : 'SAVE ATTRIBUTES'}
                   </button>
                 </div>
               </form>
             ) : player.stats && Object.keys(player.stats).length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '0.5rem 3rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem 4rem' }}>
                 {STAT_KEYS.filter(k => player.stats[k] !== undefined).map(k => (
                   <StatBar key={k} label={k} value={player.stats[k]} />
                 ))}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-                <p className="text-muted">No attributes recorded for this player.</p>
+              <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                <p className="text-muted" style={{ fontFamily: 'var(--font-sport)', fontSize: '2rem' }}>NO ATTRIBUTES RECORDED</p>
               </div>
             )}
           </div>
@@ -313,24 +308,21 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
         {activeTab === 'highlights' && (
           <div>
             {!player.highlights || player.highlights.length === 0 ? (
-              <div className="card" style={{ textAlign: 'center', padding: '5rem 0' }}>
-                <div style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                </div>
-                <h3 style={{ margin: '0 0 0.5rem' }}>No footage available</h3>
-                <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Upload game highlights to showcase your abilities.</p>
+              <div className="sport-card" style={{ textAlign: 'center', padding: '6rem 0' }}>
+                <h3 style={{ margin: '0 0 1rem', fontSize: '2.5rem' }}>NO FOOTAGE AVAILABLE</h3>
+                <p className="text-muted" style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>Upload game highlights to showcase abilities on the pitch.</p>
                 {isOwnProfile && (
-                  <button onClick={onUploadClick} className="btn btn-secondary">Upload Video</button>
+                  <button onClick={onUploadClick} className="btn btn-primary">UPLOAD VIDEO</button>
                 )}
               </div>
             ) : (
-              <div className="grid-cards">
+              <div className="roster-grid">
                 {player.highlights.map((vid) => (
-                  <div key={vid.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <video src={vid.url} controls style={{ width: '100%', display: 'block', background: '#000', borderBottom: '1px solid var(--border-color)' }} />
-                    <div style={{ padding: '1.25rem' }}>
-                      <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.95rem' }}>{vid.title}</h4>
-                      <p className="text-muted" style={{ margin: 0, fontSize: '0.8rem' }}>Uploaded {vid.uploadedAt}</p>
+                  <div key={vid.id} className="sport-card" style={{ padding: 0 }}>
+                    <video src={vid.url} controls style={{ width: '100%', display: 'block', background: '#000', borderBottom: '1px solid var(--border-subtle)' }} />
+                    <div style={{ padding: '1.5rem' }}>
+                      <h4 style={{ margin: '0 0 0.25rem', fontFamily: 'var(--font-ui)', fontWeight: 700, textTransform: 'none' }}>{vid.title}</h4>
+                      <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>UPLOADED {vid.uploadedAt}</p>
                     </div>
                   </div>
                 ))}

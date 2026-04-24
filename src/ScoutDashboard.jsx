@@ -13,14 +13,9 @@ const CompactCard = ({ player, onClick }) => (
   <div 
     className="card" 
     onClick={() => onClick(player)} 
-    style={{ 
-      cursor: 'pointer', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', 
-      minWidth: '200px', transition: 'transform 0.2s ease', background: 'var(--bg-surface)' 
-    }} 
-    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'} 
-    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+    style={{ cursor: 'pointer', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}
   >
-    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-main)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--text-primary)' }}>
       {player.name?.[0]?.toUpperCase() || '?'}
     </div>
     <div>
@@ -38,11 +33,8 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   const [topPlayers, setTopPlayers] = useState(null);
   const [recentPlayers, setRecentPlayers] = useState(null);
 
-  // ── Search tracking refs ────────────────────────────────
-  // filteredRef: always holds latest filtered list without adding it to effect deps
   const filteredRef      = useRef([]);
-  // trackedSearches: session-level dedup — prevents re-inserting same (query, player) pair
-  const trackedSearches  = useRef(new Set()); // Set<"query:playerId">
+  const trackedSearches  = useRef(new Set());
 
   useEffect(() => {
     if (!players || players.length === 0) return;
@@ -55,7 +47,6 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       const playerMap = {};
       players.forEach(p => playerMap[p.id] = p);
 
-      // 1. Top Players (Aggregate views)
       const { data: allViews, error: viewsError } = await supabase.from('player_views').select('player_id').limit(500);
       if (!isMounted) return;
       if (viewsError) {
@@ -69,7 +60,6 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
         setTopPlayers(top);
       }
 
-      // 2. Recently Viewed (Current Scout)
       const { data: recentViews, error: recentError } = await supabase
         .from('player_views')
         .select('player_id, viewed_at')
@@ -100,7 +90,6 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
     return () => { isMounted = false; };
   }, [players]);
 
-  // 3. REAL SEARCH & Filter
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const filtered = (players || []).filter(p => {
     const matchesPos = filterPosition === 'All' || p.position === filterPosition;
@@ -113,18 +102,13 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
     return matchesPos && matchesAge && matchesName;
   });
 
-  // Keep filteredRef current without adding it to the search-tracking deps.
   useEffect(() => {
     filteredRef.current = filtered;
   }, [filtered]);
 
-  // ── Search impression tracking ──────────────────────────
-  // Fires 400ms after scout stops typing.
-  // Inserts one row per visible player (capped at 10), skipping already-tracked pairs.
-  // ScoutDashboard only renders for scouts (enforced in App.jsx) — no role re-check needed.
   useEffect(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return; // empty search → don't track
+    if (!query) return;
 
     const timer = setTimeout(async () => {
       const currentFiltered = filteredRef.current;
@@ -134,37 +118,34 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       if (!user) return;
 
       const toInsert = currentFiltered
-        .slice(0, 10) // cap at 10 — avoid bulk inserts on large result sets
+        .slice(0, 10)
         .filter(p => !trackedSearches.current.has(`${query}:${p.id}`))
         .map(p => ({ player_id: p.id, scout_id: user.id, query }));
 
       if (toInsert.length === 0) return;
 
-      // Mark optimistically before insert — prevents double-fire on re-renders
       toInsert.forEach(r => trackedSearches.current.add(`${r.query}:${r.player_id}`));
 
       const { error } = await supabase.from('player_search_views').insert(toInsert);
       if (error) {
         console.error('Search tracking error:', error.message);
-        // Roll back session cache so a retry is possible on next search
         toInsert.forEach(r => trackedSearches.current.delete(`${r.query}:${r.player_id}`));
       }
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]); // only re-fires when query text changes
+  }, [searchQuery]);
 
   return (
     <div className="container animate-fade-in" style={{ paddingTop: '2rem' }}>
       
-      <div className="hero-section" style={{ padding: '2rem 1rem', marginBottom: '2rem' }}>
+      <div className="hero-section" style={{ padding: '2rem 1rem', marginBottom: '2rem', borderBottom: 'none' }}>
         <h1 className="hero-title" style={{ fontSize: '2.5rem' }}>Scout Dashboard</h1>
         <p className="hero-subtitle">
           Discover talented players and analyze their performance.
         </p>
       </div>
 
-      {/* FEATURE 1 & 2: Top Players & Recent Views */}
       {players && players.length > 0 && searchQuery.trim().length === 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
           <div>
@@ -187,7 +168,6 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
         </div>
       )}
 
-      {/* FILTER BAR & SEARCH */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <p className="text-muted" style={{ margin: 0 }}>
           Showing {filtered.length} of {players?.length || 0} players
@@ -239,7 +219,9 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
         </div>
       ) : players.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>🏆</div>
+          <div style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+          </div>
           <h3 style={{ marginBottom: '0.5rem' }}>No players yet.</h3>
           <p className="text-muted">No players available yet. Check back later.</p>
         </div>
@@ -256,20 +238,14 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
             <div 
               key={player.id} 
               className="card" 
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                transition: 'transform 0.2s ease', 
-                cursor: 'pointer' 
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+              onClick={() => onSelectPlayer(player)}
             >
               <div style={{ marginBottom: '1rem' }}>
                 <span 
                   className="badge" 
                   style={{ 
-                    background: positionColors[player.position] ? `${positionColors[player.position]}20` : 'rgba(255,255,255,0.1)', 
+                    background: positionColors[player.position] ? `${positionColors[player.position]}15` : 'rgba(255,255,255,0.05)', 
                     color: positionColors[player.position] || '#fff',
                     border: `1px solid ${positionColors[player.position] ? positionColors[player.position] : '#ffffff'}40`
                   }}
@@ -284,7 +260,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
                 <span>Age {player.age}</span>
               </div>
 
-              <button onClick={() => onSelectPlayer(player)} className="btn btn-secondary" style={{ width: '100%' }}>
+              <button className="btn btn-secondary" style={{ width: '100%', pointerEvents: 'none' }}>
                 View Profile
               </button>
             </div>

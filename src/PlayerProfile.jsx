@@ -17,26 +17,31 @@ const getStatsDraft = (stats = {}) =>
     return draft;
   }, {});
 
-const StatBar = ({ label, value }) => (
-  <div style={{ marginBottom: '1.25rem' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-      <span className="text-muted" style={{ textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em', fontSize: '0.75rem' }}>{label}</span>
-      <span style={{ 
-        fontWeight: '600', 
-        color: value > 80 ? 'var(--success)' : value < 65 ? 'var(--text-muted)' : 'var(--text-primary)' 
-      }}>{value}</span>
+const StatBar = ({ label, value }) => {
+  const isHigh = value > 80;
+  const isLow = value < 65;
+  const color = isHigh ? 'var(--success)' : isLow ? 'var(--warning)' : 'var(--accent-primary)';
+  const shadowColor = isHigh ? 'rgba(16, 185, 129, 0.4)' : isLow ? 'rgba(245, 158, 11, 0.4)' : 'rgba(59, 130, 246, 0.4)';
+
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+        <span className="text-muted" style={{ textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em', fontSize: '0.75rem' }}>{label}</span>
+        <span style={{ fontWeight: '700', color }}>{value}</span>
+      </div>
+      <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '100px', height: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ 
+          width: `${value}%`, 
+          height: '100%', 
+          borderRadius: '100px', 
+          background: `linear-gradient(90deg, ${color}, transparent 200%)`, 
+          boxShadow: `0 0 12px ${shadowColor}`,
+          transition: 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)' 
+        }} />
+      </div>
     </div>
-    <div style={{ background: 'var(--bg-main)', borderRadius: '4px', height: '6px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-      <div style={{ 
-        width: `${value}%`, 
-        height: '100%', 
-        borderRadius: '4px', 
-        background: value > 80 ? 'var(--success)' : value < 65 ? 'var(--text-secondary)' : 'var(--text-primary)', 
-        transition: 'width 0.5s ease-out' 
-      }} />
-    </div>
-  </div>
-);
+  );
+};
 
 const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGenerateReport, onSaveStats }) => {
   const [activeTab, setActiveTab] = useState('overview');

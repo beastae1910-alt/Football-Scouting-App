@@ -77,24 +77,24 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
           <p className="hero-subtitle">
             Your profile is live. Upload highlights to increase your chances of getting scouted.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2.5rem', flexWrap: 'wrap' }}>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', minWidth: '150px', backdropFilter: 'blur(10px)', flex: '1 1 auto' }}>
-              <strong style={{ fontSize: '2.2rem', color: 'var(--accent-primary)', lineHeight: 1, display: 'block' }}>{realViews !== null ? realViews : '-'}</strong>
-              <span className="text-muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.5rem' }}>Scout Views</span>
+          <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', marginTop: '3rem', flexWrap: 'wrap' }}>
+            <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
+              <strong style={{ fontSize: '2.5rem', color: 'var(--accent-primary)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}>{realViews !== null ? realViews : '-'}</strong>
+              <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Scout Views</span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', minWidth: '150px', backdropFilter: 'blur(10px)', flex: '1 1 auto' }}>
-              <strong style={{ fontSize: '2.2rem', color: 'var(--success)', lineHeight: 1, display: 'block' }}>
+            <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
+              <strong style={{ fontSize: '2.5rem', color: 'var(--success)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(16, 185, 129, 0.4)' }}>
                 {searchAppearances !== null ? searchAppearances : '—'}
               </strong>
-              <span className="text-muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.5rem' }}>Search Appearances</span>
+              <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Search Appearances</span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', minWidth: '150px', backdropFilter: 'blur(10px)', flex: '1 1 auto' }}>
-              <strong style={{ fontSize: '2.2rem', color: 'var(--warning)', lineHeight: 1, display: 'block' }}>{shortlistCount !== null ? shortlistCount : '-'}</strong>
-              <span className="text-muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.5rem' }}>Scout Shortlists</span>
+            <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
+              <strong style={{ fontSize: '2.5rem', color: 'var(--warning)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(245, 158, 11, 0.4)' }}>{shortlistCount !== null ? shortlistCount : '-'}</strong>
+              <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Scout Shortlists</span>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', minWidth: '150px', backdropFilter: 'blur(10px)', flex: '1 1 auto' }}>
-              <strong style={{ fontSize: '2.2rem', color: 'var(--accent-primary)', lineHeight: 1, display: 'block' }}>{players[0].highlights?.length || 0}</strong>
-              <span className="text-muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.5rem' }}>Highlights</span>
+            <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
+              <strong style={{ fontSize: '2.5rem', color: 'var(--accent-primary)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}>{players[0].highlights?.length || 0}</strong>
+              <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Highlights</span>
             </div>
           </div>
         </div>

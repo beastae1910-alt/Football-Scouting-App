@@ -20,8 +20,8 @@ const getStatsDraft = (stats = {}) =>
 const StatBar = ({ label, value }) => {
   const isHigh = value > 80;
   const isLow = value < 65;
-  const color = isHigh ? 'var(--success)' : isLow ? 'var(--warning)' : 'var(--accent-primary)';
-  const shadowColor = isHigh ? 'rgba(16, 185, 129, 0.4)' : isLow ? 'rgba(245, 158, 11, 0.4)' : 'rgba(59, 130, 246, 0.4)';
+  const color = isHigh ? 'var(--success)' : isLow ? 'var(--danger)' : 'var(--accent-gold)';
+  const shadowColor = isHigh ? 'rgba(16, 185, 129, 0.4)' : isLow ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.4)';
 
   return (
     <div style={{ marginBottom: '1.25rem' }}>

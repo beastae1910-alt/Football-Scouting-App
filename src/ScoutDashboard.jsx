@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 
 const positionColors = {
-  Forward:    '#F59E0B',
-  Midfielder: '#3B82F6',
-  Winger:     '#8B5CF6',
-  Goalkeeper: '#EF4444',
-  Defender:   '#10B981',
+  Forward:    '#F97316', // Orange
+  Midfielder: '#F59E0B', // Gold
+  Winger:     '#EAB308', // Yellow
+  Goalkeeper: '#EF4444', // Red
+  Defender:   '#10B981', // Green
 };
 
 const CompactCard = ({ player, onClick }) => (

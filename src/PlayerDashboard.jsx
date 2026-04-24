@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 const positionColors = {
-  Forward:    '#F59E0B',
-  Midfielder: '#3B82F6',
-  Winger:     '#8B5CF6',
+  Forward:    '#F97316',
+  Midfielder: '#F59E0B',
+  Winger:     '#EAB308',
   Goalkeeper: '#EF4444',
   Defender:   '#10B981',
 };
@@ -31,7 +31,6 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
       if (!isMounted) return;
       if (!error) setRealViews(count || 0);
 
-      // Fetch real search appearance count from new table
       const { count: saCount, error: saError } = await supabase
         .from('player_search_views')
         .select('*', { count: 'exact', head: true })
@@ -79,7 +78,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
           </p>
           <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', marginTop: '3rem', flexWrap: 'wrap' }}>
             <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
-              <strong style={{ fontSize: '2.5rem', color: 'var(--accent-primary)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}>{realViews !== null ? realViews : '-'}</strong>
+              <strong style={{ fontSize: '2.5rem', color: 'var(--accent-gold)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(245, 158, 11, 0.4)' }}>{realViews !== null ? realViews : '-'}</strong>
               <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Scout Views</span>
             </div>
             <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
@@ -89,11 +88,11 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Search Appearances</span>
             </div>
             <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
-              <strong style={{ fontSize: '2.5rem', color: 'var(--warning)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(245, 158, 11, 0.4)' }}>{shortlistCount !== null ? shortlistCount : '-'}</strong>
+              <strong style={{ fontSize: '2.5rem', color: 'var(--accent-orange)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(249, 115, 22, 0.4)' }}>{shortlistCount !== null ? shortlistCount : '-'}</strong>
               <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Scout Shortlists</span>
             </div>
             <div className="card" style={{ padding: '1.5rem', minWidth: '160px', flex: '1 1 auto', textAlign: 'center' }}>
-              <strong style={{ fontSize: '2.5rem', color: 'var(--accent-primary)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}>{players[0].highlights?.length || 0}</strong>
+              <strong style={{ fontSize: '2.5rem', color: 'var(--text-primary)', lineHeight: 1, display: 'block', textShadow: '0 0 20px rgba(255, 255, 255, 0.2)' }}>{players[0].highlights?.length || 0}</strong>
               <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'block', marginTop: '0.75rem' }}>Highlights</span>
             </div>
           </div>

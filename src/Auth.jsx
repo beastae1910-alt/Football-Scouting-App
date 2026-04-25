@@ -177,7 +177,7 @@ const Auth = () => {
       setError('Google sign-in failed. Please try again.');
       setGoogleLoading(false);
     }
-    // On success, Supabase redirects the browser — no further action needed here
+    // On success, Supabase redirects the browser.
   };
 
   // ── Email / Password ───────────────────────────────────────
@@ -222,7 +222,11 @@ const Auth = () => {
         setError('Too many failed attempts. Account locked for 30 seconds.');
       } else {
         const left = MAX_ATTEMPTS - attemptsRef.current;
-        setError(`Invalid credentials. ${left} attempt${left !== 1 ? 's' : ''} remaining.`);
+        if (mode === 'login') {
+          setError(`Invalid credentials. ${left} attempt${left !== 1 ? 's' : ''} remaining.`);
+        } else {
+          setError('Could not create account. Check your details and try again.');
+        }
       }
       return;
     }
@@ -247,7 +251,7 @@ const Auth = () => {
 
       {/* Brand */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem', letterSpacing: '-0.03em' }}>ScoutIndia ⚽</h1>
+        <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem', letterSpacing: '-0.03em' }}>ScoutIndia</h1>
         <p className="text-muted" style={{ margin: 0, fontSize: '0.95rem' }}>
           {mode === 'login' ? 'Welcome back. Sign in to continue.' : 'Join ScoutIndia. Get discovered.'}
         </p>

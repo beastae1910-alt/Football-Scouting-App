@@ -11,7 +11,7 @@ const ALLOWED_VIDEO_TYPES = {
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB hard limit
 const MAX_TITLE_LEN  = 120;
 
-// SECURITY: Basic string sanitizer — strips HTML-injection characters
+// SECURITY: Basic string sanitizer that strips HTML-injection characters.
 const sanitize = (str) => str.trim().replace(/[<>"'`]/g, '');
 
 const getExtension = (fileName) => {
@@ -146,7 +146,7 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
       id:         Date.now(),
       title:      safeTitle,
       fileName:   videoFile.name,
-      url:        data.publicUrl, // permanent — survives refresh
+      url:        data.publicUrl, // permanent URL that survives refresh
       uploadedAt: new Date().toLocaleDateString(),
     };
 

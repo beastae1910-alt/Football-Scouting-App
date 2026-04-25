@@ -10,25 +10,24 @@ const RoleSelection = ({ user, onRoleSelected }) => {
     setError(null);
 
     try {
-      // Check if profile already exists
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: selectError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (selectError) throw selectError;
 
       if (!existingProfile) {
-        // Insert new profile
         const { error: insertError } = await supabase
           .from('profiles')
           .insert({
             id: user.id,
-            role: role
+            role,
           });
 
         if (insertError) throw insertError;
       } else {
-        // Update existing profile
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ role })
@@ -37,26 +36,24 @@ const RoleSelection = ({ user, onRoleSelected }) => {
         if (updateError) throw updateError;
       }
 
-      // Optional: also store in auth metadata
-      await supabase.auth.updateUser({
-        data: { role }
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { role },
       });
 
-      // Pass updated role back with correct user_metadata structure
-      onRoleSelected({ ...user, user_metadata: { ...user.user_metadata, role } });
+      if (metadataError) throw metadataError;
 
+      onRoleSelected({ ...user, user_metadata: { ...user.user_metadata, role } });
     } catch (err) {
       console.error('Failed to save role:', err);
       setError('Failed to save role. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1.5rem' }}>
       <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '480px', textAlign: 'center', padding: '3rem 2rem' }}>
-        
         <h1 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
           Welcome to ScoutIndia!
         </h1>
@@ -72,13 +69,11 @@ const RoleSelection = ({ user, onRoleSelected }) => {
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          
-          {/* Player */}
-          <button 
+          <button
             onClick={() => handleSelectRole('player')}
             disabled={loading}
             className="btn btn-secondary"
-            style={{ 
+            style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -86,7 +81,7 @@ const RoleSelection = ({ user, onRoleSelected }) => {
               padding: '2rem 1rem',
               height: 'auto',
               border: '2px solid var(--border-color)',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'var(--accent-primary)';
@@ -97,8 +92,8 @@ const RoleSelection = ({ user, onRoleSelected }) => {
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            <div style={{ fontSize: '3rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '50%' }}>
-              👟
+            <div style={{ fontFamily: 'var(--font-sport)', fontSize: '3rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '50%' }}>
+              01
             </div>
             <div>
               <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.2rem' }}>
@@ -110,12 +105,11 @@ const RoleSelection = ({ user, onRoleSelected }) => {
             </div>
           </button>
 
-          {/* Scout */}
-          <button 
+          <button
             onClick={() => handleSelectRole('scout')}
             disabled={loading}
             className="btn btn-secondary"
-            style={{ 
+            style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -123,7 +117,7 @@ const RoleSelection = ({ user, onRoleSelected }) => {
               padding: '2rem 1rem',
               height: 'auto',
               border: '2px solid var(--border-color)',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = 'var(--success)';
@@ -134,8 +128,8 @@ const RoleSelection = ({ user, onRoleSelected }) => {
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            <div style={{ fontSize: '3rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '50%' }}>
-              📋
+            <div style={{ fontFamily: 'var(--font-sport)', fontSize: '3rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '50%' }}>
+              02
             </div>
             <div>
               <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.2rem' }}>
@@ -146,7 +140,6 @@ const RoleSelection = ({ user, onRoleSelected }) => {
               </p>
             </div>
           </button>
-
         </div>
 
         {loading && (

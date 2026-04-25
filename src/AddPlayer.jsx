@@ -6,7 +6,7 @@ const POSITIONS = ['Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'];
 // SECURITY: Strict field length limits (OWASP: reject oversized inputs)
 const LIMITS = { name: 100, city: 100 };
 
-// SECURITY: Sanitize — strips characters used in XSS / HTML injection
+// SECURITY: Sanitize by stripping characters used in XSS / HTML injection.
 const sanitize = (str) => str.trim().replace(/[<>"'`]/g, '');
 
 // SECURITY: Only allow letters, spaces, hyphens, apostrophes in names
@@ -33,22 +33,23 @@ const AddPlayer = ({ user, onPlayerAdded, onCancel }) => {
     const city = sanitize(form.city);
     const age  = Number(form.age);
 
-    // Validate name — required, max length, allowed characters
+    // Validate name: required, max length, allowed characters.
     if (!name)                          return setError('Name is required.');
     if (name.length > LIMITS.name)      return setError(`Name must be under ${LIMITS.name} characters.`);
     if (!isValidName(name))             return setError('Name may only contain letters, spaces, hyphens, and apostrophes.');
 
-    // Validate age — must be a real integer in range (no float tricks)
+    // Validate age: must be a real integer in range.
     if (!Number.isInteger(age) || age < 1 || age > 40)
       return setError('Enter a valid age between 1 and 40.');
 
-    // Validate position — must be from the whitelist (OWASP: reject unexpected fields)
+    // Validate position: must be from the whitelist.
     if (!POSITIONS.includes(form.position))
       return setError('Invalid position selected.');
 
     // Validate city
     if (!city)                          return setError('City is required.');
     if (city.length > LIMITS.city)      return setError(`City must be under ${LIMITS.city} characters.`);
+    if (!user?.id)                      return setError('You must be signed in to create a profile.');
 
     setSaving(true);
 

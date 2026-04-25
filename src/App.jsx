@@ -6,7 +6,7 @@ import UploadVideo from './UploadVideo';
 import AddPlayer from './AddPlayer';
 import Auth from './Auth';
 import RoleSelection from './RoleSelection';
-import { supabase } from './supabaseClient';
+import { supabase, supabaseConfigError } from './supabaseClient';
 
 const STAT_KEYS = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical'];
 
@@ -27,6 +27,15 @@ function App() {
   useEffect(() => {
     let isMounted = true;
 
+    if (!supabase) {
+      queueMicrotask(() => {
+        if (isMounted) setAuthLoading(false);
+      });
+      return () => {
+        isMounted = false;
+      };
+    }
+
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         if (!isMounted) return;
@@ -40,6 +49,7 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isMounted) {
         setUser(session?.user ?? null);
+        setProfile(null);
       }
     });
 
@@ -53,7 +63,7 @@ function App() {
   useEffect(() => {
     let isMounted = true;
 
-    if (user) {
+    if (user && supabase) {
       supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
         .then(({ data, error }) => {
           if (!isMounted) return;
@@ -63,6 +73,11 @@ function App() {
           } else {
             setProfile(data || { role: user.user_metadata?.role || null });
           }
+        })
+        .catch((profileError) => {
+          if (!isMounted) return;
+          console.error('Profile fetch failed:', profileError);
+          setProfile({ role: user.user_metadata?.role || null });
         });
     } else {
       queueMicrotask(() => {
@@ -84,7 +99,7 @@ function App() {
   useEffect(() => {
     let isMounted = true;
 
-    if (!user || !effectiveRole) {
+    if (!supabase || !user || !effectiveRole) {
       queueMicrotask(() => {
         if (isMounted) setPlayers([]);
       });
@@ -102,15 +117,23 @@ function App() {
         query = query.eq('user_id', user.id);
       }
 
-      const { data, error } = await query;
+      try {
+        const { data, error } = await query;
 
-      if (!isMounted) return;
-      if (error) {
+        if (!isMounted) return;
+        if (error) {
+          console.error('Players fetch error:', error);
+          setError('Failed to load players. Please try refreshing.');
+        } else {
+          setPlayers((data || []).map((p) => ({ ...p, highlights: p.highlights || [] })));
+        }
+      } catch (playersError) {
+        if (!isMounted) return;
+        console.error('Players fetch failed:', playersError);
         setError('Failed to load players. Please try refreshing.');
-      } else {
-        setPlayers((data || []).map((p) => ({ ...p, highlights: p.highlights || [] })));
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchPlayers();
@@ -209,6 +232,12 @@ function App() {
   if (authLoading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif', fontSize: '1rem' }}>
       Loading...
+    </div>
+  );
+
+  if (supabaseConfigError) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1.5rem', color: 'var(--danger)', textAlign: 'center' }}>
+      {supabaseConfigError}
     </div>
   );
 

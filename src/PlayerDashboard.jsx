@@ -80,7 +80,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
       {userRole === 'player' && safePlayers.length > 0 ? (
         <div className="hero-block" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
           <h1 className="hero-title-giant" style={{ color: 'var(--text-main)' }}>
-            WELCOME BACK, <span style={{ color: 'var(--pitch-green)' }}>{safePlayers[0].name.split(' ')[0]}</span>
+            WELCOME BACK, <span style={{ color: 'var(--pitch-green)' }}>{(safePlayers[0].name || 'PLAYER').split(' ')[0]}</span>
           </h1>
           <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '1.5rem auto 3rem' }}>
             Your profile is live on the network. Keep your highlights updated to maximize your exposure to professional scouts.
@@ -93,7 +93,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
             </div>
             <div className="stat-box" style={{ borderTop: '4px solid var(--pitch-green)', transition: 'all 0.3s ease' }}>
               <div className="stat-value" style={{ color: 'var(--pitch-green)' }}>
-                {searchAppearances !== null ? searchAppearances : '—'}
+                {searchAppearances !== null ? searchAppearances : '-'}
               </div>
               <div className="stat-label">Search Appearances</div>
             </div>
@@ -240,7 +240,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
         ) : (
           <div className="roster-grid">
             {filtered.map((player) => (
-              <div key={player.id} className={`sport-card ${getCardAccent(player.position)}`} style={{ display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+              <div key={player.id} onClick={() => onSelectPlayer && onSelectPlayer(player)} className={`sport-card ${getCardAccent(player.position)}`} style={{ display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                   <span className={`badge ${getPosClass(player.position)}`} style={{ transition: 'all 0.2s ease' }}>
                     {player.position}
@@ -256,7 +256,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
                   {player.highlights?.length || 0} HIGHLIGHT{player.highlights?.length !== 1 ? 'S' : ''} UPLOADED
                 </div>
 
-                <button onClick={() => onSelectPlayer && onSelectPlayer(player)} className="btn btn-secondary" style={{ width: '100%', transition: 'all 0.2s ease' }}>
+                <button className="btn btn-secondary" style={{ width: '100%', transition: 'all 0.2s ease', pointerEvents: 'none' }}>
                   VIEW PROFILE
                 </button>
               </div>

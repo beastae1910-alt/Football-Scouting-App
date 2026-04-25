@@ -22,11 +22,11 @@ const STRENGTH_PHRASES = {
 
 const WEAKNESS_PHRASES = {
   pace:       'limited pace which restricts effective pressing',
-  shooting:   'poor finishing — needs significant work in front of goal',
-  passing:    'below-par passing accuracy — struggles to retain possession',
-  dribbling:  'weak dribbling — often dispossessed in tight areas',
+  shooting:   'poor finishing - needs significant work in front of goal',
+  passing:    'below-par passing accuracy - struggles to retain possession',
+  dribbling:  'weak dribbling - often dispossessed in tight areas',
   defending:  'poor defensive positioning and weak in the challenge',
-  physical:   'lack of physicality — can be bullied off the ball',
+  physical:   'lack of physicality - can be bullied off the ball',
 };
 
 const REQUIRED_STATS = Object.keys(STAT_LABELS);
@@ -87,7 +87,7 @@ export const generateReport = (player) => {
   }
 
   if (strengths.length === 0 && weaknesses.length === 0) {
-    report += ` All stats fall within a mid-range band — consistent but not outstanding in any single area.`;
+    report += ` All stats fall within a mid-range band - consistent but not outstanding in any single area.`;
   }
 
   return report;

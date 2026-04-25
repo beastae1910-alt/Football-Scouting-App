@@ -138,34 +138,60 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-return (
+  return (
     <div className="container animate-up" style={{ paddingTop: '2rem' }}>
       
-      <div className="hero-block" style={{ padding: '3rem 2rem', marginBottom: '3rem' }}>
-        <h1 className="hero-title-giant" style={{ color: 'var(--pitch-green)' }}>SCOUT<br/><span style={{ color: 'var(--text-main)' }}>COMMAND</span></h1>
-        <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '500px', margin: '1rem 0 0' }}>
-          Real-time discovery engine. Analyze player performance, track potential, and build your roster.
-        </p>
+      {/* ── SCOUT HERO LANDING ── */}
+      <div className="hero-block" style={{ padding: '4rem 3rem', marginBottom: '3rem', display: 'flex', flexWrap: 'wrap', gap: '3rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ flex: '1 1 500px' }}>
+          <div className="badge badge-orange" style={{ marginBottom: '1rem' }}>SCOUTING NETWORK</div>
+          <h1 className="hero-title-giant" style={{ color: 'var(--pitch-green)', fontSize: 'clamp(4rem, 8vw, 6rem)' }}>TALENT<br/><span style={{ color: 'var(--text-main)', textShadow: 'none' }}>RADAR</span></h1>
+          <p style={{ fontSize: '1.35rem', color: 'var(--text-secondary)', maxWidth: '550px', margin: '1.5rem 0 0', fontWeight: 500 }}>
+            Real-time access to emerging players. Filter by position, age, and performance metrics to build your shortlist.
+          </p>
+        </div>
+        
+        {safePlayers.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', flex: '1 1 300px' }}>
+            <div className="stat-box" style={{ borderTop: '4px solid var(--pitch-green)' }}>
+              <div className="stat-value" style={{ color: 'var(--pitch-green)' }}>{safePlayers.length}</div>
+              <div className="stat-label">ACTIVE PROSPECTS</div>
+            </div>
+            <div className="stat-box" style={{ borderTop: '4px solid var(--amber-gold)' }}>
+              <div className="stat-value" style={{ color: 'var(--amber-gold)' }}>{topPlayers ? topPlayers.length : '-'}</div>
+              <div className="stat-label">HOT PROSPECTS</div>
+            </div>
+            <div className="stat-box" style={{ borderTop: '4px solid var(--energy-orange)' }}>
+              <div className="stat-value" style={{ color: 'var(--energy-orange)' }}>{recentPlayers ? recentPlayers.length : '-'}</div>
+              <div className="stat-label">RECENTLY VIEWED</div>
+            </div>
+            <div className="stat-box" style={{ borderTop: '4px solid var(--text-main)' }}>
+              <div className="stat-value" style={{ color: 'var(--text-main)' }}>{AGE_FILTERS.length - 1}</div>
+              <div className="stat-label">AGE BRACKETS</div>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* ── HOT & RECENT PLAYERS SECTION ── */}
       {safePlayers.length > 0 && searchQuery.trim().length === 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '3rem', marginBottom: '4rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.5rem', color: 'var(--pitch-green)' }}>HOT PROSPECTS</h3>
+          <div className="sport-card" style={{ padding: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', color: 'var(--pitch-green)' }}>HOT PROSPECTS</h3>
             </div>
-            {!topPlayers ? <p className="text-muted">Loading...</p> : topPlayers.length === 0 ? <p className="text-muted">No activity yet</p> : (
+            {!topPlayers ? <p className="text-muted">Loading network data...</p> : topPlayers.length === 0 ? <p className="text-muted">No activity yet. Discover players below.</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {topPlayers.map(p => <CompactCard key={p.id} player={p} onClick={onSelectPlayer} />)}
               </div>
             )}
           </div>
 
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.5rem', color: 'var(--amber-gold)' }}>RECENTLY SCOUTED</h3>
+          <div className="sport-card" style={{ padding: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', color: 'var(--amber-gold)' }}>RECENTLY SCOUTED</h3>
             </div>
-            {!recentPlayers ? <p className="text-muted">Loading...</p> : recentPlayers.length === 0 ? <p className="text-muted">No recent views</p> : (
+            {!recentPlayers ? <p className="text-muted">Loading network data...</p> : recentPlayers.length === 0 ? <p className="text-muted">No recently viewed players.</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {recentPlayers.map(p => <CompactCard key={p.id} player={p} onClick={onSelectPlayer} />)}
               </div>
@@ -174,55 +200,61 @@ return (
         </div>
       )}
 
-      <div style={{ background: 'var(--bg-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '3rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-        <h3 style={{ margin: '0 0 1.5rem', fontSize: '1.5rem', flex: '1 1 100%' }}>PLAYER DATABASE</h3>
-        
-        <input
-          type="text"
-          placeholder="SEARCH PLAYERS..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-field"
-          style={{ flex: '1 1 250px', textTransform: 'uppercase', fontWeight: 600 }}
-        />
+      {/* ── PLAYER DATABASE FILTERS ── */}
+      {safePlayers.length > 0 && (
+        <div style={{ background: 'var(--bg-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '3rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+          <h3 style={{ margin: '0 0 1.5rem', fontSize: '1.5rem', flex: '1 1 100%' }}>PLAYER DATABASE</h3>
+          
+          <input
+            type="text"
+            placeholder="SEARCH PLAYERS..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field"
+            style={{ flex: '1 1 250px', textTransform: 'uppercase', fontWeight: 600 }}
+          />
 
-        <select
-          value={filterPosition}
-          onChange={(e) => setFilterPos(e.target.value)}
-          className="input-field"
-          style={{ width: 'auto', minWidth: '160px', textTransform: 'uppercase', fontWeight: 600 }}
-        >
-          {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
-            <option key={pos} value={pos}>{pos}</option>
-          ))}
-        </select>
+          <select
+            value={filterPosition}
+            onChange={(e) => setFilterPos(e.target.value)}
+            className="input-field"
+            style={{ width: 'auto', minWidth: '160px', textTransform: 'uppercase', fontWeight: 600 }}
+          >
+            {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
+              <option key={pos} value={pos}>{pos}</option>
+            ))}
+          </select>
 
-        <select
-          value={filterAge}
-          onChange={(e) => setFilterAge(e.target.value)}
-          className="input-field"
-          style={{ width: 'auto', minWidth: '140px', textTransform: 'uppercase', fontWeight: 600 }}
-        >
-          {AGE_FILTERS.map((age) => (
-            <option key={age} value={age}>{age}</option>
-          ))}
-        </select>
+          <select
+            value={filterAge}
+            onChange={(e) => setFilterAge(e.target.value)}
+            className="input-field"
+            style={{ width: 'auto', minWidth: '140px', textTransform: 'uppercase', fontWeight: 600 }}
+          >
+            {AGE_FILTERS.map((age) => (
+              <option key={age} value={age}>{age}</option>
+            ))}
+          </select>
 
-        {(searchQuery || filterPosition !== 'All' || filterAge !== 'All') && (
-          <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ padding: '0.75rem' }}>
-            RESET
-          </button>
-        )}
-      </div>
+          {(searchQuery || filterPosition !== 'All' || filterAge !== 'All') && (
+            <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ padding: '0.75rem' }}>
+              RESET
+            </button>
+          )}
+        </div>
+      )}
 
+      {/* ── STATES & ROSTER ── */}
       {isLoadingPlayers ? (
         <div style={{ textAlign: 'center', padding: '5rem 1rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-sport)', fontSize: '2rem' }}>
-          LOADING DATABASE...
+          CONNECTING TO NETWORK...
         </div>
       ) : safePlayers.length === 0 ? (
-        <div className="sport-card" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
-          <h3 style={{ marginBottom: '0.5rem', fontSize: '2rem' }}>NO PLAYERS REGISTERED</h3>
-          <p className="text-muted">The database is currently empty.</p>
+        <div className="sport-card" style={{ textAlign: 'center', padding: '6rem 2rem', borderTop: '4px solid var(--text-dim)' }}>
+          <div style={{ fontFamily: 'var(--font-sport)', fontSize: '6rem', color: 'var(--text-dim)', lineHeight: 0.9, marginBottom: '1.5rem' }}>NETWORK<br/>OFFLINE</div>
+          <p className="text-muted" style={{ fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto', fontFamily: 'var(--font-ui)' }}>
+            The player database is currently awaiting new registrations. Once athletes create their profiles, they will automatically appear on your radar.
+          </p>
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 0' }}>
@@ -254,7 +286,7 @@ return (
               <div style={{ flex: 1, marginBottom: '2rem' }}></div>
 
               <button className="btn btn-secondary" style={{ width: '100%', pointerEvents: 'none' }}>
-                VIEW PROFILE
+                VIEW DOSSIER
               </button>
             </div>
           ))}

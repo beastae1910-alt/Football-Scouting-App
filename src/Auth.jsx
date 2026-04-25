@@ -7,6 +7,7 @@ const MAX_ATTEMPTS  = 5;
 const LOCKOUT_MS    = 30000;
 const MAX_EMAIL_LEN = 254;
 const MAX_PASS_LEN  = 128;
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 const isValidEmail = (email) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= MAX_EMAIL_LEN;
@@ -24,11 +25,16 @@ const Auth = () => {
 
   const attemptsRef    = useRef(0);
   const lockedUntilRef = useRef(null);
-  const captchaRef = useRef(null);
+  const captchaWidgetRef = useRef(null);
 
   const getRemainingLockout = () => {
     if (!lockedUntilRef.current) return 0;
     return Math.max(0, Math.ceil((lockedUntilRef.current - Date.now()) / 1000));
+  };
+
+  const resetCaptcha = () => {
+    captchaWidgetRef.current?.reset?.();
+    setCaptchaToken(null);
   };
 
   useEffect(() => {
@@ -76,6 +82,7 @@ const Auth = () => {
     if (!isValidEmail(email))      { setError('Please enter a valid email address.'); return; }
     if (password.length < 6)       { setError('Password must be at least 6 characters.'); return; }
     if (password.length > MAX_PASS_LEN) { setError(`Password must be under ${MAX_PASS_LEN} characters.`); return; }
+    if (!TURNSTILE_SITE_KEY)       { setError('Security check is not configured.'); return; }
     if (!captchaToken)             { setError('Please complete the security check.'); return; }
 
     setLoading(true);
@@ -93,8 +100,7 @@ const Auth = () => {
         });
 
     setLoading(false);
-    captchaRef.current?.reset();
-    setCaptchaToken(null);
+    resetCaptcha();
 
     if (authError) {
       attemptsRef.current += 1;
@@ -116,7 +122,14 @@ const Auth = () => {
     if (mode === 'signup') setSuccess('Account created! Check your email to confirm, then sign in.');
   };
 
-  const switchMode = () => { setMode((m) => (m === 'login' ? 'signup' : 'login')); setError(null); setSuccess(null); };
+  const switchMode = () => {
+    setMode((m) => (m === 'login' ? 'signup' : 'login'));
+    setError(null);
+    setSuccess(null);
+    resetCaptcha();
+  };
+
+  const isSubmitDisabled = loading || lockoutRemaining > 0 || !captchaToken || !TURNSTILE_SITE_KEY;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1.5rem' }}>
@@ -181,20 +194,41 @@ const Auth = () => {
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'} className="input-field" />
           </label>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <Turnstile
-              ref={captchaRef}
-              sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-              onVerify={(token) => setCaptchaToken(token)}
-              onExpire={() => setCaptchaToken(null)}
-            />
-          </div>
+          {TURNSTILE_SITE_KEY ? (
+            <div style={{ marginBottom: '1rem', minHeight: '65px' }}>
+              <Turnstile
+                sitekey={TURNSTILE_SITE_KEY}
+                onLoad={(_widgetId, boundTurnstile) => {
+                  captchaWidgetRef.current = boundTurnstile;
+                }}
+                onVerify={(token, boundTurnstile) => {
+                  captchaWidgetRef.current = boundTurnstile;
+                  setCaptchaToken(token);
+                }}
+                onExpire={() => setCaptchaToken(null)}
+                onTimeout={() => setCaptchaToken(null)}
+                onError={(captchaError) => {
+                  console.error('Turnstile failed:', captchaError);
+                  setCaptchaToken(null);
+                  setError('Security check failed to load. Please refresh and try again.');
+                }}
+                onUnsupported={() => {
+                  setCaptchaToken(null);
+                  setError('Security check is not supported in this browser.');
+                }}
+              />
+            </div>
+          ) : (
+            <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+              Security check is not configured.
+            </p>
+          )}
 
           {error   && <p style={{ color: 'var(--danger)',  fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>}
           {success && <p style={{ color: 'var(--success)', fontSize: '0.85rem', marginBottom: '1rem' }}>{success}</p>}
 
-          <button type="submit" disabled={loading || lockoutRemaining > 0 || !captchaToken} className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', opacity: loading ? 0.7 : 1 }}>
+          <button type="submit" disabled={isSubmitDisabled} className="btn btn-primary"
+            style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', opacity: isSubmitDisabled ? 0.7 : 1 }}>
             {loading
               ? (mode === 'login' ? 'Signing in...' : 'Creating account...')
               : (mode === 'login' ? 'Sign In' : 'Create Account')}

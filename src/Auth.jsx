@@ -7,7 +7,8 @@ const MAX_ATTEMPTS  = 5;
 const LOCKOUT_MS    = 30000;
 const MAX_EMAIL_LEN = 254;
 const MAX_PASS_LEN  = 128;
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+const FALLBACK_TURNSTILE_SITE_KEY = '0x4AAAAAADC2lra94Q6i1vN8';
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || FALLBACK_TURNSTILE_SITE_KEY;
 
 const isValidEmail = (email) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= MAX_EMAIL_LEN;

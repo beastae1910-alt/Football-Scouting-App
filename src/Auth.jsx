@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Turnstile from 'react-turnstile';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from './supabaseClient';
 
 // SECURITY: Constants for rate limiting and validation
@@ -9,9 +8,106 @@ const MAX_EMAIL_LEN = 254;
 const MAX_PASS_LEN  = 128;
 const FALLBACK_TURNSTILE_SITE_KEY = '0x4AAAAAADC2lra94Q6i1vN8';
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || FALLBACK_TURNSTILE_SITE_KEY;
+const TURNSTILE_SCRIPT_ID = 'cloudflare-turnstile-api';
+
+let turnstileScriptPromise = null;
 
 const isValidEmail = (email) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= MAX_EMAIL_LEN;
+
+const loadTurnstile = () => {
+  if (window.turnstile) return Promise.resolve(window.turnstile);
+  if (turnstileScriptPromise) return turnstileScriptPromise;
+
+  turnstileScriptPromise = new Promise((resolve, reject) => {
+    const existingScript = document.getElementById(TURNSTILE_SCRIPT_ID);
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(window.turnstile), { once: true });
+      existingScript.addEventListener('error', () => reject(new Error('Failed to load Turnstile.')), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = TURNSTILE_SCRIPT_ID;
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.turnstile) resolve(window.turnstile);
+      else reject(new Error('Turnstile loaded without an API object.'));
+    };
+    script.onerror = () => reject(new Error('Failed to load Turnstile.'));
+    document.head.appendChild(script);
+  });
+
+  return turnstileScriptPromise;
+};
+
+const TurnstileChallenge = ({ sitekey, onVerify, onReady, onError }) => {
+  const containerRef = useRef(null);
+  const widgetIdRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    onVerify(null);
+    onReady(null);
+
+    if (!sitekey) return undefined;
+
+    loadTurnstile()
+      .then((turnstile) => {
+        if (cancelled || !containerRef.current) return;
+
+        try {
+          widgetIdRef.current = turnstile.render(containerRef.current, {
+            sitekey,
+            callback: (token) => onVerify(token),
+            'expired-callback': () => onVerify(null),
+            'timeout-callback': () => onVerify(null),
+            'error-callback': (captchaError) => {
+              onVerify(null);
+              onError(captchaError || new Error('Turnstile failed.'));
+            },
+            'unsupported-callback': () => {
+              onVerify(null);
+              onError(new Error('Turnstile is not supported in this browser.'));
+            },
+          });
+
+          onReady(() => {
+            try {
+              if (widgetIdRef.current && window.turnstile) {
+                window.turnstile.reset(widgetIdRef.current);
+              }
+            } catch (resetError) {
+              console.error('Failed to reset Turnstile:', resetError);
+            }
+            onVerify(null);
+          });
+        } catch (renderError) {
+          onError(renderError);
+        }
+      })
+      .catch((loadError) => {
+        if (!cancelled) onError(loadError);
+      });
+
+    return () => {
+      cancelled = true;
+      onReady(null);
+      if (widgetIdRef.current && window.turnstile) {
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch (removeError) {
+          console.error('Failed to remove Turnstile:', removeError);
+        }
+      }
+      widgetIdRef.current = null;
+    };
+  }, [sitekey, onVerify, onReady, onError]);
+
+  return <div ref={containerRef} />;
+};
 
 const Auth = () => {
   const [mode, setMode]         = useState('login');
@@ -26,17 +122,31 @@ const Auth = () => {
 
   const attemptsRef    = useRef(0);
   const lockedUntilRef = useRef(null);
-  const captchaWidgetRef = useRef(null);
+  const captchaResetRef = useRef(null);
 
   const getRemainingLockout = () => {
     if (!lockedUntilRef.current) return 0;
     return Math.max(0, Math.ceil((lockedUntilRef.current - Date.now()) / 1000));
   };
 
-  const resetCaptcha = () => {
-    captchaWidgetRef.current?.reset?.();
+  const resetCaptcha = useCallback(() => {
+    captchaResetRef.current?.();
     setCaptchaToken(null);
-  };
+  }, []);
+
+  const handleCaptchaReady = useCallback((resetFn) => {
+    captchaResetRef.current = resetFn;
+  }, []);
+
+  const handleCaptchaVerify = useCallback((token) => {
+    setCaptchaToken(token);
+  }, []);
+
+  const handleCaptchaError = useCallback((captchaError) => {
+    console.error('Turnstile failed:', captchaError);
+    setCaptchaToken(null);
+    setError('Security check failed to load. Please refresh and try again.');
+  }, []);
 
   useEffect(() => {
     if (lockoutRemaining <= 0) return;
@@ -197,26 +307,11 @@ const Auth = () => {
 
           {TURNSTILE_SITE_KEY ? (
             <div style={{ marginBottom: '1rem', minHeight: '65px' }}>
-              <Turnstile
+              <TurnstileChallenge
                 sitekey={TURNSTILE_SITE_KEY}
-                onLoad={(_widgetId, boundTurnstile) => {
-                  captchaWidgetRef.current = boundTurnstile;
-                }}
-                onVerify={(token, boundTurnstile) => {
-                  captchaWidgetRef.current = boundTurnstile;
-                  setCaptchaToken(token);
-                }}
-                onExpire={() => setCaptchaToken(null)}
-                onTimeout={() => setCaptchaToken(null)}
-                onError={(captchaError) => {
-                  console.error('Turnstile failed:', captchaError);
-                  setCaptchaToken(null);
-                  setError('Security check failed to load. Please refresh and try again.');
-                }}
-                onUnsupported={() => {
-                  setCaptchaToken(null);
-                  setError('Security check is not supported in this browser.');
-                }}
+                onVerify={handleCaptchaVerify}
+                onReady={handleCaptchaReady}
+                onError={handleCaptchaError}
               />
             </div>
           ) : (

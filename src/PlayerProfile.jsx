@@ -11,6 +11,8 @@ const getPosClass = (pos) => {
 };
 
 const STAT_KEYS = ['pace', 'shooting', 'passing', 'dribbling', 'defending', 'physical'];
+const trackedScoutViews = new Set();
+const pendingScoutViews = new Set();
 
 const getStatsDraft = (stats = {}) =>
   STAT_KEYS.reduce((draft, key) => {
@@ -71,18 +73,29 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
     if (userRole === 'scout' && player.user_id !== viewerId) {
       if (trackedPlayerId.current === player.id) return;
       trackedPlayerId.current = player.id;
+      const viewDate = new Date().toISOString().split('T')[0];
+      const viewKey = `${viewerId}:${player.id}:${viewDate}`;
+      if (trackedScoutViews.has(viewKey) || pendingScoutViews.has(viewKey)) return;
+      pendingScoutViews.add(viewKey);
 
       const trackView = async () => {
         const { error } = await supabase.from('player_views').insert([{ 
           player_id: player.id, 
           scout_id: viewerId,
-          view_date: new Date().toISOString().split('T')[0]
+          view_date: viewDate
         }]);
 
-        if (error && error.code !== '23505') {
+        pendingScoutViews.delete(viewKey);
+        if (error) {
+          if (error.code === '23505') {
+            trackedScoutViews.add(viewKey);
+            return;
+          }
           console.error('Unexpected error tracking scout view:', error);
           trackedPlayerId.current = null;
+          return;
         }
+        trackedScoutViews.add(viewKey);
       };
 
       trackView();
@@ -143,7 +156,8 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
       setStatsSaved(true);
     } catch (err) {
       if (!isMountedRef.current) return;
-      setStatsError(err.message || 'Failed to save stats.');
+      console.error('Failed to save stats:', err);
+      setStatsError('Failed to save attributes. Please try again.');
     } finally {
       if (isMountedRef.current) setIsSavingStats(false);
     }
@@ -161,7 +175,8 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
 
     if (!isMountedRef.current) return;
     if (error && error.code !== '23505') {
-      setShortlistError(error.message);
+      console.error('Failed to shortlist player:', error);
+      setShortlistError('Failed to shortlist player. Please try again.');
       setShortlistLoading(false);
       return;
     }
@@ -218,37 +233,7 @@ return (
         )}
       </div>
 
-        <div style={{ flex: 1, minWidth: '250px' }}>
-          <h1 className="hero-title-giant" style={{ wordBreak: 'break-word' }}>{player.name}</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <span className={`badge ${getPosClass(player.position)}`} style={{ fontSize: '1.25rem', padding: '0.25rem 1rem' }}>
-              {player.position}
-            </span>
-            <span style={{ fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-secondary)' }}>
-              AGE {player.age} {player.city ? `// ${player.city}` : ''}
-            </span>
-          </div>
-        </div>
-
-        {isScout && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-            <button onClick={handleShortlist} disabled={shortlistLoading || isShortlisted} className={isShortlisted ? 'btn btn-secondary' : 'btn btn-primary'}>
-              {isShortlisted ? 'SHORTLISTED' : (shortlistLoading ? 'SAVING...' : 'SHORTLIST PLAYER')}
-            </button>
-            {shortlistError && (
-              <span style={{ color: 'var(--alert-red)', fontSize: '0.8rem', fontFamily: 'var(--font-ui)', fontWeight: 700 }}>{shortlistError}</span>
-            )}
-          </div>
-        )}
-
-        {isOwnProfile && (
-          <button onClick={onUploadClick} className="btn btn-primary">
-            UPLOAD HIGHLIGHT
-          </button>
-        )}
-      </div>
-
-{/* TABS */}
+      {/* TABS */}
       <div className="sport-tabs">
         <button className={`sport-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>OVERVIEW</button>
         <button className={`sport-tab ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>ATTRIBUTES</button>

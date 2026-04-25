@@ -46,7 +46,8 @@ const RoleSelection = ({ user, onRoleSelected }) => {
       onRoleSelected({ ...user, user_metadata: { ...user.user_metadata, role } });
 
     } catch (err) {
-      setError(`Failed to save role: ${err.message}`);
+      console.error('Failed to save role:', err);
+      setError('Failed to save role. Please try again.');
     }
 
     setLoading(false);

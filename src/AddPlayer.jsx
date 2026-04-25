@@ -67,7 +67,11 @@ const AddPlayer = ({ user, onPlayerAdded, onCancel }) => {
 
     setSaving(false);
 
-    if (dbError) { setError(`Failed to save: ${dbError.message}`); return; }
+    if (dbError) {
+      console.error('Failed to create player profile:', dbError);
+      setError('Failed to create profile. Please try again.');
+      return;
+    }
     onPlayerAdded(data);
   };
 

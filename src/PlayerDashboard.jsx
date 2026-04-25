@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './supabaseClient';
+import { AGE_FILTERS, matchesAgeFilter } from './playerFilters';
 
 const getPosClass = (pos) => {
   if (pos === 'Forward') return 'badge-orange';
@@ -17,6 +18,7 @@ const getCardAccent = (pos) => {
 };
 
 const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }) => {
+  const safePlayers = useMemo(() => Array.isArray(players) ? players : [], [players]);
   const [search, setSearch]             = useState('');
   const [filterPosition, setFilterPos]  = useState('All');
   const [filterAge, setFilterAge]       = useState('All');
@@ -25,9 +27,9 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
   const [shortlistCount, setShortlistCount]    = useState(null);
 
   useEffect(() => {
-    if (userRole !== 'player' || players.length === 0) return;
+    if (userRole !== 'player' || safePlayers.length === 0) return;
     let isMounted = true;
-    const playerId = players[0]?.id;
+    const playerId = safePlayers[0]?.id;
     if (!playerId) return;
 
     const fetchViews = async () => {
@@ -55,21 +57,17 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
 
     fetchViews();
     return () => { isMounted = false; };
-  }, [userRole, players]);
+  }, [userRole, safePlayers]);
 
   const filtered = useMemo(() => {
-    return players.filter((p) => {
+    return safePlayers.filter((p) => {
       const matchesSearch   = (p.name || '').toLowerCase().includes(search.toLowerCase());
       const matchesPosition = filterPosition === 'All' || p.position === filterPosition;
-      const matchesAge =
-        filterAge === 'All'      ? true :
-        filterAge === 'Under 16' ? p.age <= 16 :
-        filterAge === 'Under 18' ? p.age <= 18 :
-        filterAge === 'Under 21' ? p.age <= 21 : true;
+      const matchesAge = matchesAgeFilter(p.age, filterAge);
 
       return matchesSearch && matchesPosition && matchesAge;
     });
-  }, [players, search, filterPosition, filterAge]);
+  }, [safePlayers, search, filterPosition, filterAge]);
 
   const scrollToPlayers = () => {
     document.getElementById('scout-dashboard')?.scrollIntoView({ behavior: 'smooth' });
@@ -79,10 +77,10 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
     <div className="container animate-up">
       
       {/* Conditional Hero / Stats Section */}
-      {userRole === 'player' && players.length > 0 ? (
+      {userRole === 'player' && safePlayers.length > 0 ? (
         <div className="hero-block" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
           <h1 className="hero-title-giant" style={{ color: 'var(--text-main)' }}>
-            WELCOME BACK, <span style={{ color: 'var(--pitch-green)' }}>{players[0].name.split(' ')[0]}</span>
+            WELCOME BACK, <span style={{ color: 'var(--pitch-green)' }}>{safePlayers[0].name.split(' ')[0]}</span>
           </h1>
           <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '1.5rem auto 3rem' }}>
             Your profile is live on the network. Keep your highlights updated to maximize your exposure to professional scouts.
@@ -104,7 +102,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               <div className="stat-label">Shortlists</div>
             </div>
             <div className="stat-box" style={{ borderTop: '4px solid var(--text-main)', transition: 'all 0.3s ease' }}>
-              <div className="stat-value" style={{ color: 'var(--text-main)' }}>{players[0].highlights?.length || 0}</div>
+              <div className="stat-value" style={{ color: 'var(--text-main)' }}>{safePlayers[0].highlights?.length || 0}</div>
               <div className="stat-label">Highlights</div>
             </div>
           </div>
@@ -174,7 +172,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
           )}
         </div>
         <p className="text-muted" style={{ marginBottom: '2.5rem', fontFamily: 'var(--font-sport)', fontSize: '1.5rem' }}>
-          SHOWING {filtered.length} OF {players.length} REGISTERED PLAYERS
+          SHOWING {filtered.length} OF {safePlayers.length} REGISTERED PLAYERS
         </p>
 
         {/* Filter Bar */}
@@ -205,7 +203,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
             className="input-field"
             style={{ width: 'auto', minWidth: '130px', textTransform: 'uppercase', fontWeight: 700, transition: 'all 0.2s ease' }}
           >
-            {['All', 'Under 16', 'Under 18', 'Under 21'].map((a) => (
+            {AGE_FILTERS.map((a) => (
               <option key={a} value={a}>{a}</option>
             ))}
           </select>
@@ -218,7 +216,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
         </div>
 
 {/* Player Cards */}
-        {players.length === 0 ? (
+        {safePlayers.length === 0 ? (
           <div className="sport-card" style={{ textAlign: 'center', padding: '5rem 1rem', transition: 'all 0.3s ease' }}>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '2rem' }}>NO PLAYERS REGISTERED</h3>
             <p className="text-muted" style={{ marginBottom: '2.5rem', maxWidth: '400px', margin: '0 auto 2.5rem', fontSize: '1.1rem' }}>
@@ -259,40 +257,6 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
                 </div>
 
                 <button onClick={() => onSelectPlayer && onSelectPlayer(player)} className="btn btn-secondary" style={{ width: '100%', transition: 'all 0.2s ease' }}>
-                  VIEW PROFILE
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
-            <h3 style={{ color: 'var(--text-dim)' }}>0 RESULTS FOUND</h3>
-            <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
-              CLEAR FILTERS
-            </button>
-          </div>
-        ) : (
-          <div className="roster-grid">
-            {filtered.map((player) => (
-              <div key={player.id} className={`sport-card ${getCardAccent(player.position)}`} style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                  <span className={`badge ${getPosClass(player.position)}`}>
-                    {player.position}
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-dim)', lineHeight: 1 }}>
-                    AGE {player.age}
-                  </span>
-                </div>
-
-                <h3 style={{ margin: '0 0 1rem', fontSize: '2.5rem', lineHeight: 1 }}>{player.name}</h3>
-
-                <div className="text-muted" style={{ fontFamily: 'var(--font-sport)', fontSize: '1.25rem', marginBottom: '2rem', flex: 1, letterSpacing: '1px' }}>
-                  {player.highlights?.length || 0} HIGHLIGHT{player.highlights?.length !== 1 ? 'S' : ''} UPLOADED
-                </div>
-
-                <button onClick={() => onSelectPlayer && onSelectPlayer(player)} className="btn btn-secondary" style={{ width: '100%' }}>
                   VIEW PROFILE
                 </button>
               </div>

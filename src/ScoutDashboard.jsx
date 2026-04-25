@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from './supabaseClient';
+import { AGE_FILTERS, matchesAgeFilter } from './playerFilters';
 
 const getPosClass = (pos) => {
   if (pos === 'Forward') return 'badge-orange';
@@ -33,6 +34,8 @@ const CompactCard = ({ player, onClick }) => (
 );
 
 const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
+  const safePlayers = useMemo(() => Array.isArray(players) ? players : [], [players]);
+  const isLoadingPlayers = players === null || players === undefined;
   const [filterPosition, setFilterPos] = useState('All');
   const [filterAge, setFilterAge] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,15 +47,15 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   const trackedSearches  = useRef(new Set());
 
   useEffect(() => {
-    if (!players || players.length === 0) return;
+    if (safePlayers.length === 0) return;
     let isMounted = true;
 
     const fetchScoutData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } = {} } = await supabase.auth.getUser();
       if (!user || !isMounted) return;
 
       const playerMap = {};
-      players.forEach(p => playerMap[p.id] = p);
+      safePlayers.forEach(p => playerMap[p.id] = p);
 
       const { data: allViews, error: viewsError } = await supabase.from('player_views').select('player_id').limit(500);
       if (!isMounted) return;
@@ -69,9 +72,9 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
       const { data: recentViews, error: recentError } = await supabase
         .from('player_views')
-        .select('player_id, viewed_at')
+        .select('player_id, view_date')
         .eq('scout_id', user.id)
-        .order('viewed_at', { ascending: false })
+        .order('view_date', { ascending: false })
         .limit(50);
 
       if (!isMounted) return;
@@ -95,16 +98,12 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
     fetchScoutData();
     return () => { isMounted = false; };
-  }, [players]);
+  }, [safePlayers]);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
-  const filtered = (players || []).filter(p => {
+  const filtered = safePlayers.filter(p => {
     const matchesPos = filterPosition === 'All' || p.position === filterPosition;
-    const matchesAge =
-      filterAge === 'All'      ? true :
-      filterAge === 'Under 16' ? p.age <= 16 :
-      filterAge === 'Under 18' ? p.age <= 18 :
-      filterAge === 'Under 21' ? p.age <= 21 : true;
+    const matchesAge = matchesAgeFilter(p.age, filterAge);
     const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
     return matchesPos && matchesAge && matchesName;
   });
@@ -121,7 +120,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       const currentFiltered = filteredRef.current;
       if (currentFiltered.length === 0) return;
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } = {} } = await supabase.auth.getUser();
       if (!user) return;
 
       const toInsert = currentFiltered
@@ -149,7 +148,7 @@ return (
         </p>
       </div>
 
-      {players && players.length > 0 && searchQuery.trim().length === 0 && (
+      {safePlayers.length > 0 && searchQuery.trim().length === 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '3rem', marginBottom: '4rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
@@ -204,7 +203,7 @@ return (
           className="input-field"
           style={{ width: 'auto', minWidth: '140px', textTransform: 'uppercase', fontWeight: 600 }}
         >
-          {['All', 'Under 16', 'Under 18', 'Under 21'].map((age) => (
+          {AGE_FILTERS.map((age) => (
             <option key={age} value={age}>{age}</option>
           ))}
         </select>
@@ -216,11 +215,11 @@ return (
         )}
       </div>
 
-      {players === null ? (
+      {isLoadingPlayers ? (
         <div style={{ textAlign: 'center', padding: '5rem 1rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-sport)', fontSize: '2rem' }}>
           LOADING DATABASE...
         </div>
-      ) : players.length === 0 ? (
+      ) : safePlayers.length === 0 ? (
         <div className="sport-card" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
           <h3 style={{ marginBottom: '0.5rem', fontSize: '2rem' }}>NO PLAYERS REGISTERED</h3>
           <p className="text-muted">The database is currently empty.</p>

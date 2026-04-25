@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Turnstile from 'react-turnstile';
 import { supabase } from './supabaseClient';
 
 // SECURITY: Constants for rate limiting and validation
@@ -19,9 +20,11 @@ const Auth = () => {
   const [error, setError]       = useState(null);
   const [success, setSuccess]   = useState(null);
   const [lockoutRemaining, setLockoutRemaining] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState(null);
 
   const attemptsRef    = useRef(0);
   const lockedUntilRef = useRef(null);
+  const captchaRef = useRef(null);
 
   const getRemainingLockout = () => {
     if (!lockedUntilRef.current) return 0;
@@ -53,7 +56,8 @@ const Auth = () => {
     });
 
     if (error) {
-      setError(error.message);
+      console.error('Google sign-in failed:', error);
+      setError('Google sign-in failed. Please try again.');
       setGoogleLoading(false);
     }
     // On success, Supabase redirects the browser — no further action needed here
@@ -72,14 +76,25 @@ const Auth = () => {
     if (!isValidEmail(email))      { setError('Please enter a valid email address.'); return; }
     if (password.length < 6)       { setError('Password must be at least 6 characters.'); return; }
     if (password.length > MAX_PASS_LEN) { setError(`Password must be under ${MAX_PASS_LEN} characters.`); return; }
+    if (!captchaToken)             { setError('Please complete the security check.'); return; }
 
     setLoading(true);
 
     const { error: authError } = mode === 'login'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
+      ? await supabase.auth.signInWithPassword({
+          email,
+          password,
+          options: { captchaToken }
+        })
+      : await supabase.auth.signUp({
+          email,
+          password,
+          options: { captchaToken }
+        });
 
     setLoading(false);
+    captchaRef.current?.reset();
+    setCaptchaToken(null);
 
     if (authError) {
       attemptsRef.current += 1;
@@ -166,10 +181,19 @@ const Auth = () => {
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'} className="input-field" />
           </label>
 
+          <div style={{ marginBottom: '1rem' }}>
+            <Turnstile
+              ref={captchaRef}
+              sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+              onVerify={(token) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          </div>
+
           {error   && <p style={{ color: 'var(--danger)',  fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>}
           {success && <p style={{ color: 'var(--success)', fontSize: '0.85rem', marginBottom: '1rem' }}>{success}</p>}
 
-          <button type="submit" disabled={loading || lockoutRemaining > 0} className="btn btn-primary"
+          <button type="submit" disabled={loading || lockoutRemaining > 0 || !captchaToken} className="btn btn-primary"
             style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', opacity: loading ? 0.7 : 1 }}>
             {loading
               ? (mode === 'login' ? 'Signing in...' : 'Creating account...')

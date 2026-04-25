@@ -140,8 +140,15 @@ function App() {
     
     const { data, error } = await query.select();
 
-    if (error) { alert(`DB error: ${error.message}`); return; }
-    if (!data || data.length === 0) { alert('No rows updated!'); return; }
+    if (error) {
+      console.error('Failed to save uploaded highlight:', error);
+      alert('Failed to save upload. Please try again.');
+      return;
+    }
+    if (!data || data.length === 0) {
+      alert('No matching player profile was updated.');
+      return;
+    }
 
     setPlayers((prev) => prev.map((p) =>
       p.id === selectedId ? { ...p, highlights: updatedHighlights } : p
@@ -161,7 +168,11 @@ function App() {
     }
     
     const { error } = await query;
-    if (error) { alert(`Failed to save report: ${error.message}`); return; }
+    if (error) {
+      console.error('Failed to save report:', error);
+      alert('Failed to save report. Please try again.');
+      return;
+    }
     
     setPlayers((prev) => prev.map((p) =>
       p.id === selectedId ? { ...p, ai_report: reportText } : p

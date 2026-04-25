@@ -29,19 +29,47 @@ const WEAKNESS_PHRASES = {
   physical:   'lack of physicality — can be bullied off the ball',
 };
 
+const REQUIRED_STATS = Object.keys(STAT_LABELS);
+
+const normalizeStats = (stats) => {
+  if (!stats || typeof stats !== 'object') return null;
+
+  const missing = REQUIRED_STATS.filter((key) => stats[key] === undefined || stats[key] === null || stats[key] === '');
+  if (missing.length > 0) return { missing };
+
+  const values = {};
+  for (const key of REQUIRED_STATS) {
+    const value = Number(stats[key]);
+    if (!Number.isFinite(value)) return { invalid: key };
+    values[key] = Math.min(100, Math.max(0, value));
+  }
+
+  return { values };
+};
+
 export const generateReport = (player) => {
   const { position, age, stats } = player;
+  const normalized = normalizeStats(stats);
 
-  if (!stats || Object.keys(stats).length === 0) {
+  if (!normalized) {
     return `A ${age}-year-old ${position} with no recorded stats yet. More data needed for a detailed scouting report.`;
   }
 
-  const strengths = Object.entries(stats)
+  if (normalized.missing) {
+    const missingLabels = normalized.missing.map((key) => STAT_LABELS[key]).join(', ');
+    return `A ${age}-year-old ${position} with incomplete stats. Missing ${missingLabels}; more data is needed for a detailed scouting report.`;
+  }
+
+  if (normalized.invalid) {
+    return `A ${age}-year-old ${position} has invalid ${STAT_LABELS[normalized.invalid]} data. More reliable stats are needed for a detailed scouting report.`;
+  }
+
+  const strengths = Object.entries(normalized.values)
     .filter(([, val]) => val > 80)
     .map(([key]) => STRENGTH_PHRASES[key])
     .filter(Boolean);
 
-  const weaknesses = Object.entries(stats)
+  const weaknesses = Object.entries(normalized.values)
     .filter(([, val]) => val < 65)
     .map(([key]) => WEAKNESS_PHRASES[key])
     .filter(Boolean);

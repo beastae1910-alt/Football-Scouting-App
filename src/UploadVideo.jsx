@@ -2,12 +2,41 @@ import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 // SECURITY: Whitelist of accepted video MIME types (OWASP: restrict file type)
-const ALLOWED_TYPES  = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+const ALLOWED_VIDEO_TYPES = {
+  'video/mp4': ['mp4', 'm4v'],
+  'video/webm': ['webm'],
+  'video/ogg': ['ogv', 'ogg'],
+  'video/quicktime': ['mov'],
+};
 const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB hard limit
 const MAX_TITLE_LEN  = 120;
 
 // SECURITY: Basic string sanitizer — strips HTML-injection characters
 const sanitize = (str) => str.trim().replace(/[<>"'`]/g, '');
+
+const getExtension = (fileName) => {
+  const match = /\.([a-z0-9]+)$/i.exec(fileName || '');
+  return match ? match[1].toLowerCase() : '';
+};
+
+const hasExpectedVideoSignature = async (file) => {
+  const bytes = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const ascii = String.fromCharCode(...bytes);
+
+  if (file.type === 'video/mp4' || file.type === 'video/quicktime') {
+    return ascii.slice(4, 8) === 'ftyp';
+  }
+
+  if (file.type === 'video/webm') {
+    return bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3;
+  }
+
+  if (file.type === 'video/ogg') {
+    return ascii.slice(0, 4) === 'OggS';
+  }
+
+  return false;
+};
 
 const UploadVideo = ({ playerName, onUpload, onCancel }) => {
   const [videoFile, setVideoFile]   = useState(null);
@@ -17,19 +46,44 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
+  const clearSelectedFile = () => {
+    setVideoFile(null);
+    setVideoURL((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     // SECURITY: Validate MIME type against whitelist (not just file extension)
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const allowedExtensions = ALLOWED_VIDEO_TYPES[file.type];
+    if (!allowedExtensions) {
+      clearSelectedFile();
       setUploadError(`Invalid file type "${file.type}". Allowed: MP4, WebM, OGG, MOV.`);
+      return;
+    }
+
+    const fileExt = getExtension(file.name);
+    if (!allowedExtensions.includes(fileExt)) {
+      clearSelectedFile();
+      setUploadError('The file extension does not match the selected video type.');
       return;
     }
 
     // SECURITY: Enforce maximum file size to prevent storage abuse
     if (file.size > MAX_SIZE_BYTES) {
+      clearSelectedFile();
       setUploadError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed: 100 MB.`);
+      return;
+    }
+
+    if (!(await hasExpectedVideoSignature(file))) {
+      clearSelectedFile();
+      setUploadError('The selected file does not appear to be a valid video.');
       return;
     }
 
@@ -62,7 +116,12 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
     setUploadError(null);
 
     // Build a collision-resistant path: timestamp + random suffix
-    const fileExt  = videoFile.name.split('.').pop().toLowerCase();
+    const fileExt  = ALLOWED_VIDEO_TYPES[videoFile.type]?.[0];
+    if (!fileExt) {
+      setUploadError('Invalid video type.');
+      setUploading(false);
+      return;
+    }
     const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
     const filePath = `highlights/${fileName}`;
 
@@ -71,10 +130,11 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
       .upload(filePath, videoFile, {
         contentType: videoFile.type, // explicitly set, don't let server guess
         upsert: false,               // prevent overwriting existing files
-      });
+    });
 
     if (storageError) {
-      setUploadError(`Upload failed: ${storageError.message}`);
+      console.error('Upload failed:', storageError);
+      setUploadError('Upload failed. Please try again.');
       setUploading(false);
       return;
     }

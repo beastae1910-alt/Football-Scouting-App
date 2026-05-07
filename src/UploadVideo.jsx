@@ -48,10 +48,8 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
 
   const clearSelectedFile = () => {
     setVideoFile(null);
-    setVideoURL((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
-    });
+    if (videoURL) URL.revokeObjectURL(videoURL);
+    setVideoURL(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -89,11 +87,9 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
 
     setVideoFile(file);
     // BUG FIX: Revoke previous blob URL before creating a new one to prevent memory leak
+    if (videoURL) URL.revokeObjectURL(videoURL);
     const newUrl = URL.createObjectURL(file);
-    setVideoURL((prev) => { 
-      if (prev) URL.revokeObjectURL(prev); 
-      return newUrl;
-    });
+    setVideoURL(newUrl);
     setUploadError(null);
   };
 

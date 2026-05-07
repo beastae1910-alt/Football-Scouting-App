@@ -91,7 +91,6 @@ const PlayerProfile = ({ player, userRole, viewerId, onBack, onUploadClick, onGe
             trackedScoutViews.add(viewKey);
             return;
           }
-          console.error('Unexpected error tracking scout view:', error);
           trackedPlayerId.current = null;
           return;
         }

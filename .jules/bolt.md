@@ -1,0 +1,1 @@
+## 2024-05-24 - Parallelize independent Supabase queries\n**Learning:** Independent database queries in React components are sometimes awaited sequentially, causing unnecessary network latency.\n**Action:** Use Promise.all to parallelize independent Supabase queries to improve dashboard load times.

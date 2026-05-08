@@ -265,7 +265,7 @@ function App() {
       {/* Navigation bar */}
       <nav className="glass-nav" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => setView('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)', fontFamily: 'inherit', letterSpacing: '-0.02em', padding: 0 }}>
+          <button onClick={() => setView('dashboard')} className="brand-btn">
             ScoutIndia
           </button>
           <span className="badge" style={{ background: roleBadgeBg, color: roleBadgeColor, border: `1px solid ${roleBadgeColor}40`, textTransform: 'capitalize' }}>

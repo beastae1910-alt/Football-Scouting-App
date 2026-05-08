@@ -1,0 +1,51 @@
+--- src/index.css
++++ src/index.css
+@@ -107,6 +107,11 @@
+   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+ }
+
++/* Focus visible for accessibility */
++:focus-visible {
++  outline: 2px solid var(--pitch-green);
++  outline-offset: 2px;
++}
++
+ /* Buttons */
+ .btn {
+   display: inline-flex;
+@@ -131,6 +136,10 @@
+   box-shadow: none !important;
+ }
+
++.btn:focus-visible {
++  outline: 2px solid var(--pitch-green);
++  outline-offset: 2px;
++}
++
+ .btn-primary {
+   background: var(--pitch-green);
+   color: #000;
+@@ -183,6 +192,11 @@
+   transition: all 0.2s;
+   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+ }
++
++.sport-tab:focus-visible {
++  outline: 2px solid var(--pitch-green);
++  outline-offset: -2px;
++}
+
+ .sport-tab:hover {
+   color: var(--text-main);
+@@ -351,6 +365,11 @@
+   padding: 0.2rem 0.5rem;
+   border-radius: 4px;
+ }
++
++.brand-btn {
++  background: none; border: none; cursor: pointer; font-size: 1.1rem; font-weight: 800; color: var(--text-primary); font-family: inherit; letter-spacing: -0.02em; padding: 0.2rem;
++}
++
+
+ /* Turnstile Container Overlay */
+ .turnstile-overlay {

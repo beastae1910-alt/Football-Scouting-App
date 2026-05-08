@@ -110,6 +110,12 @@ h4 { font-size: 1.5rem; }
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
 }
 
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--pitch-green);
+  outline-offset: 2px;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -135,6 +141,11 @@ h4 { font-size: 1.5rem; }
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--pitch-green);
+  outline-offset: 2px;
 }
 
 .btn-primary {
@@ -376,6 +387,11 @@ h4 { font-size: 1.5rem; }
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
+.sport-tab:focus-visible {
+  outline: 2px solid var(--pitch-green);
+  outline-offset: -2px;
+}
+
 .sport-tab:hover { 
   color: var(--text-main); 
   background: rgba(255,255,255,0.05);
@@ -404,6 +420,24 @@ h4 { font-size: 1.5rem; }
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.brand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: inherit;
+  letter-spacing: -0.02em;
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+}
+
+.brand-btn:focus-visible {
+  outline: 2px solid var(--pitch-green);
+  outline-offset: 2px;
 }
 
 ::-webkit-scrollbar { width: 8px; }

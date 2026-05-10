@@ -1,0 +1,3 @@
+## 2024-05-18 - Accessible Names for Dashboard Filter Controls
+**Learning:** Standalone inputs and selects used as filter controls in dashboards (like search bars, position filters, and age filters) often lack explicit visible `<label>` elements due to design constraints. Without accessible names, screen reader users cannot determine the purpose of these controls.
+**Action:** Always ensure that every `input` and `select` element either has an associated explicit `<label>` or an `aria-label` attribute describing its function, particularly in tight dashboard layouts where visible labels are omitted.

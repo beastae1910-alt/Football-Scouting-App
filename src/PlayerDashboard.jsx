@@ -29,26 +29,31 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
     const playerId = players[0]?.id;
     if (!playerId) return;
 
+    // ⚡ Bolt: Parallelized independent database queries to minimize network latency
     const fetchViews = async () => {
-      const { count, error } = await supabase
-        .from('player_views')
-        .select('*', { count: 'exact', head: true })
-        .eq('player_id', playerId);
+      const [
+        { count, error },
+        { count: saCount, error: saError },
+        { count: interestCount, error: interestError }
+      ] = await Promise.all([
+        supabase
+          .from('player_views')
+          .select('*', { count: 'exact', head: true })
+          .eq('player_id', playerId),
+        supabase
+          .from('player_search_views')
+          .select('*', { count: 'exact', head: true })
+          .eq('player_id', playerId),
+        supabase
+          .from('scout_interests')
+          .select('*', { count: 'exact', head: true })
+          .eq('player_id', playerId)
+      ]);
+
       if (!isMounted) return;
+
       if (!error) setRealViews(count || 0);
-
-      const { count: saCount, error: saError } = await supabase
-        .from('player_search_views')
-        .select('*', { count: 'exact', head: true })
-        .eq('player_id', playerId);
-      if (!isMounted) return;
       if (!saError) setSearchApp(saCount || 0);
-
-      const { count: interestCount, error: interestError } = await supabase
-        .from('scout_interests')
-        .select('*', { count: 'exact', head: true })
-        .eq('player_id', playerId);
-      if (!isMounted) return;
       if (!interestError) setShortlistCount(interestCount || 0);
     };
 

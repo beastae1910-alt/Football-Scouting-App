@@ -1,0 +1,3 @@
+## 2024-05-12 - Missing Accessible Names on Dashboard Filter Controls
+**Learning:** The dashboard components (`ScoutDashboard.jsx` and `PlayerDashboard.jsx`) heavily rely on visual context (like the "PLAYER DATABASE" heading or placeholders) to describe filter inputs and select dropdowns, but these lack programmatic accessible names (e.g., explicit `<label>` elements or `aria-label` attributes), making them confusing for screen reader users.
+**Action:** Always verify that input fields and select dropdowns have explicit `aria-label` attributes or associated `<label>` tags, particularly when visual labels are omitted or implied by surrounding context.

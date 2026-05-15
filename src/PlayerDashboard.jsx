@@ -168,6 +168,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
           <div style={{ background: 'var(--bg-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '3rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <input
               type="text"
+              aria-label="Search players"
               placeholder="SEARCH PLAYERS..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -176,6 +177,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
             />
             <select
               value={filterPosition}
+              aria-label="Filter by position"
               onChange={(e) => setFilterPos(e.target.value)}
               className="input-field"
               style={{ width: 'auto', minWidth: '150px', textTransform: 'uppercase', fontWeight: 700 }}
@@ -186,6 +188,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
             </select>
             <select
               value={filterAge}
+              aria-label="Filter by age"
               onChange={(e) => setFilterAge(e.target.value)}
               className="input-field"
               style={{ width: 'auto', minWidth: '130px', textTransform: 'uppercase', fontWeight: 700 }}
@@ -195,7 +198,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               ))}
             </select>
             {(search || filterPosition !== 'All' || filterAge !== 'All') && (
-              <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost">
+              <button aria-label="Reset filters" onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost">
                 RESET
               </button>
             )}
@@ -204,7 +207,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '5rem 0' }}>
               <h3 style={{ color: 'var(--text-dim)' }}>0 RESULTS FOUND</h3>
-              <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
+              <button aria-label="Clear filters" onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
                 CLEAR FILTERS
               </button>
             </div>

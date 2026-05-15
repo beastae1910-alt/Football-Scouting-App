@@ -115,14 +115,14 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
     setUploading(true);
     setUploadError(null);
 
-    // Build a collision-resistant path: timestamp + random suffix
+    // Build a collision-resistant path: timestamp + secure random suffix
     const fileExt  = ALLOWED_VIDEO_TYPES[videoFile.type]?.[0];
     if (!fileExt) {
       setUploadError('Invalid video type.');
       setUploading(false);
       return;
     }
-    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
+    const fileName = `${Date.now()}_${crypto.randomUUID()}.${fileExt}`;
     const filePath = `highlights/${fileName}`;
 
     const { error: storageError } = await supabase.storage

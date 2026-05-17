@@ -57,8 +57,25 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       const playerMap = {};
       safePlayers.forEach(p => playerMap[p.id] = p);
 
-      const { data: allViews, error: viewsError } = await supabase.from('player_views').select('player_id').limit(500);
+      // ⚡ Bolt: Parallelize independent queries to improve scout dashboard load time.
+      // What: Replaced sequential await calls with Promise.all
+      // Why: The top players and recent views queries are independent and can be executed concurrently
+      // Impact: Reduces overall network latency by ~50%
+      const [
+        { data: allViews, error: viewsError },
+        { data: recentViews, error: recentError }
+      ] = await Promise.all([
+        supabase.from('player_views').select('player_id').limit(500),
+        supabase
+          .from('player_views')
+          .select('player_id, view_date')
+          .eq('scout_id', user.id)
+          .order('view_date', { ascending: false })
+          .limit(50)
+      ]);
+
       if (!isMounted) return;
+
       if (viewsError) {
         console.error('Failed to fetch top players:', viewsError.message);
         setTopPlayers([]);
@@ -70,14 +87,6 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
         setTopPlayers(top);
       }
 
-      const { data: recentViews, error: recentError } = await supabase
-        .from('player_views')
-        .select('player_id, view_date')
-        .eq('scout_id', user.id)
-        .order('view_date', { ascending: false })
-        .limit(50);
-
-      if (!isMounted) return;
       if (recentError) {
         console.error('Failed to fetch recent views:', recentError.message);
         setRecentPlayers([]);

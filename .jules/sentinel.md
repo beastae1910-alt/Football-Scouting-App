@@ -1,0 +1,4 @@
+## 2025-02-20 - Insecure randomness for uploaded video file names
+**Vulnerability:** The application used `Math.random()` combined with a timestamp to generate the uploaded video file names in `src/UploadVideo.jsx`. `Math.random()` generates predictable values which can result in filename guessing, enumeration, and potential overwrites (if not handled via `upsert: false`).
+**Learning:** `Math.random()` is not cryptographically secure and should never be used for sensitive or collision-resistant generation tasks like naming files or generating tokens. Developers might use it because it's convenient and easy to remember, unaware of its predictability risks.
+**Prevention:** Always use `crypto.randomUUID()` (or a proven secure identifier generation library like `uuid` or `nanoid`) when you need to generate unpredictable strings or collision-resistant identifiers.

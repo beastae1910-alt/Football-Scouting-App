@@ -208,6 +208,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           <input
             type="text"
             placeholder="SEARCH PLAYERS..."
+            aria-label="Search players by name"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field"
@@ -216,6 +217,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
           <select
             value={filterPosition}
+            aria-label="Filter players by position"
             onChange={(e) => setFilterPos(e.target.value)}
             className="input-field"
             style={{ width: 'auto', minWidth: '160px', textTransform: 'uppercase', fontWeight: 600 }}
@@ -227,6 +229,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
           <select
             value={filterAge}
+            aria-label="Filter players by age"
             onChange={(e) => setFilterAge(e.target.value)}
             className="input-field"
             style={{ width: 'auto', minWidth: '140px', textTransform: 'uppercase', fontWeight: 600 }}
@@ -237,7 +240,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           </select>
 
           {(searchQuery || filterPosition !== 'All' || filterAge !== 'All') && (
-            <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" style={{ padding: '0.75rem' }}>
+            <button onClick={() => { setSearchQuery(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost" aria-label="Reset filters" style={{ padding: '0.75rem' }}>
               RESET
             </button>
           )}

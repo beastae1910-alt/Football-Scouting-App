@@ -57,34 +57,40 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       const playerMap = {};
       safePlayers.forEach(p => playerMap[p.id] = p);
 
-      const { data: allViews, error: viewsError } = await supabase.from('player_views').select('player_id').limit(500);
+      // ⚡ BOLT OPTIMIZATION:
+      // What: Executing two independent database queries (all views and recent views) concurrently using Promise.all.
+      // Why: Sequential execution creates unnecessary waiting time. Fetching them together eliminates the waterfall delay.
+      // Impact: Expected to reduce the load time of the Scout Dashboard's initial data fetch by up to ~50%.
+      const [viewsRes, recentRes] = await Promise.all([
+        supabase.from('player_views').select('player_id').limit(500),
+        supabase
+          .from('player_views')
+          .select('player_id, view_date')
+          .eq('scout_id', user.id)
+          .order('view_date', { ascending: false })
+          .limit(50)
+      ]);
+
       if (!isMounted) return;
-      if (viewsError) {
-        console.error('Failed to fetch top players:', viewsError.message);
+
+      if (viewsRes.error) {
+        console.error('Failed to fetch top players:', viewsRes.error.message);
         setTopPlayers([]);
-      } else if (allViews) {
+      } else if (viewsRes.data) {
         const counts = {};
-        allViews.forEach(v => { counts[v.player_id] = (counts[v.player_id] || 0) + 1; });
+        viewsRes.data.forEach(v => { counts[v.player_id] = (counts[v.player_id] || 0) + 1; });
         const sortedIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 4);
         const top = sortedIds.map(id => playerMap[id]).filter(Boolean);
         setTopPlayers(top);
       }
 
-      const { data: recentViews, error: recentError } = await supabase
-        .from('player_views')
-        .select('player_id, view_date')
-        .eq('scout_id', user.id)
-        .order('view_date', { ascending: false })
-        .limit(50);
-
-      if (!isMounted) return;
-      if (recentError) {
-        console.error('Failed to fetch recent views:', recentError.message);
+      if (recentRes.error) {
+        console.error('Failed to fetch recent views:', recentRes.error.message);
         setRecentPlayers([]);
-      } else if (recentViews) {
+      } else if (recentRes.data) {
         const seen = new Set();
         const recent = [];
-        for (const view of recentViews) {
+        for (const view of recentRes.data) {
           if (!seen.has(view.player_id)) {
             seen.add(view.player_id);
             const p = playerMap[view.player_id];

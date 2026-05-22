@@ -1,0 +1,3 @@
+## 2024-05-22 - Missing Explicit Accessible Names for Dashboard Filters
+**Learning:** Filter controls (inputs and selects) in the `PlayerDashboard` and `ScoutDashboard` components were implemented without explicitly associated `<label>` elements or descriptive `aria-label` attributes. This made them inaccessible to screen readers, which rely on explicit accessible names to announce the purpose of inputs.
+**Action:** When implementing standalone inputs or select elements that don't visually pair with a traditional HTML `<label>`, always provide an explicit `aria-label` attribute describing their purpose (e.g., `aria-label="Search players"`).

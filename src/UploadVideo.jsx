@@ -122,7 +122,8 @@ const UploadVideo = ({ playerName, onUpload, onCancel }) => {
       setUploading(false);
       return;
     }
-    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
+    // Security: Use crypto.randomUUID() instead of Math.random() to prevent predictable filenames and potential path collisions
+    const fileName = `${Date.now()}_${crypto.randomUUID()}.${fileExt}`;
     const filePath = `highlights/${fileName}`;
 
     const { error: storageError } = await supabase.storage

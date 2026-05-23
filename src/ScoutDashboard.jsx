@@ -57,34 +57,32 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
       const playerMap = {};
       safePlayers.forEach(p => playerMap[p.id] = p);
 
-      const { data: allViews, error: viewsError } = await supabase.from('player_views').select('player_id').limit(500);
+      // ⚡ Bolt: Parallelized top and recent player queries to reduce network latency
+      const [allViewsRes, recentViewsRes] = await Promise.all([
+        supabase.from('player_views').select('player_id').limit(500),
+        supabase.from('player_views').select('player_id, view_date').eq('scout_id', user.id).order('view_date', { ascending: false }).limit(50)
+      ]);
+
       if (!isMounted) return;
-      if (viewsError) {
-        console.error('Failed to fetch top players:', viewsError.message);
+
+      if (allViewsRes.error) {
+        console.error('Failed to fetch top players:', allViewsRes.error.message);
         setTopPlayers([]);
-      } else if (allViews) {
+      } else if (allViewsRes.data) {
         const counts = {};
-        allViews.forEach(v => { counts[v.player_id] = (counts[v.player_id] || 0) + 1; });
+        allViewsRes.data.forEach(v => { counts[v.player_id] = (counts[v.player_id] || 0) + 1; });
         const sortedIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 4);
         const top = sortedIds.map(id => playerMap[id]).filter(Boolean);
         setTopPlayers(top);
       }
 
-      const { data: recentViews, error: recentError } = await supabase
-        .from('player_views')
-        .select('player_id, view_date')
-        .eq('scout_id', user.id)
-        .order('view_date', { ascending: false })
-        .limit(50);
-
-      if (!isMounted) return;
-      if (recentError) {
-        console.error('Failed to fetch recent views:', recentError.message);
+      if (recentViewsRes.error) {
+        console.error('Failed to fetch recent views:', recentViewsRes.error.message);
         setRecentPlayers([]);
-      } else if (recentViews) {
+      } else if (recentViewsRes.data) {
         const seen = new Set();
         const recent = [];
-        for (const view of recentViews) {
+        for (const view of recentViewsRes.data) {
           if (!seen.has(view.player_id)) {
             seen.add(view.player_id);
             const p = playerMap[view.player_id];

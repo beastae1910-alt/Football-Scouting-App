@@ -36,13 +36,9 @@ const RoleSelection = ({ user, onRoleSelected }) => {
         if (updateError) throw updateError;
       }
 
-      const { error: metadataError } = await supabase.auth.updateUser({
-        data: { role },
-      });
-
-      if (metadataError) throw metadataError;
-
-      onRoleSelected({ ...user, user_metadata: { ...user.user_metadata, role } });
+      // SECURITY: Removed vulnerable updateUser call that allowed arbitrary role injection
+      // Trust the server-side profiles table instead of client-side user_metadata
+      onRoleSelected(role);
     } catch (err) {
       console.error('Failed to save role:', err);
       setError('Failed to save role. Please try again.');

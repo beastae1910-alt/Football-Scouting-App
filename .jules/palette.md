@@ -1,0 +1,3 @@
+## 2024-05-31 - Explicit Accessible Names for Dashboard Filters
+**Learning:** Dashboard filter controls (inputs and selects) across components like PlayerDashboard and ScoutDashboard often lack explicit accessible names. Even though they have placeholder text or are visually understood in context, screen readers require explicit labels (either via associated `<label>` elements or `aria-label` attributes) to announce their purpose correctly.
+**Action:** Always ensure that standalone inputs and selects, especially those used for filtering or searching, have descriptive `aria-label` attributes if they do not have a visible, programmatically associated `<label>`.

@@ -1,0 +1,3 @@
+## 2026-06-02 - Accessible Dashboard Filter Controls
+**Learning:** Dashboard filter controls (inputs and selects) across the application, such as in `PlayerDashboard.jsx` and `ScoutDashboard.jsx`, lacked explicit accessible names. While visually clear by proximity to section headers or placeholders, screen reader users rely on explicit labels or `aria-label` attributes to understand the purpose of each control when navigating via keyboard.
+**Action:** Always ensure that input and select elements used for filtering or searching have explicitly associated `<label>` elements or descriptive `aria-label` attributes to provide accessible names, improving usability for assistive technologies.

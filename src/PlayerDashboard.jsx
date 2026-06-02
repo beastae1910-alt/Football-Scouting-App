@@ -172,12 +172,14 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-field"
+              aria-label="Search players"
               style={{ flex: 1, minWidth: '200px', textTransform: 'uppercase', fontWeight: 700 }}
             />
             <select
               value={filterPosition}
               onChange={(e) => setFilterPos(e.target.value)}
               className="input-field"
+              aria-label="Filter by position"
               style={{ width: 'auto', minWidth: '150px', textTransform: 'uppercase', fontWeight: 700 }}
             >
               {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
@@ -188,6 +190,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               value={filterAge}
               onChange={(e) => setFilterAge(e.target.value)}
               className="input-field"
+              aria-label="Filter by age"
               style={{ width: 'auto', minWidth: '130px', textTransform: 'uppercase', fontWeight: 700 }}
             >
               {['All', 'Under 16', 'Under 18', 'Under 21'].map((a) => (

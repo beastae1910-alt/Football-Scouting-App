@@ -1,0 +1,3 @@
+## 2024-05-15 - Parallelize Supabase Queries safely with Promise.all
+**Learning:** In the Supabase JS client, database queries (`supabase.from(...)`) resolve with an object containing `{ data, error, count }` rather than throwing exceptions upon query failure. This allows them to be safely grouped into a single `Promise.all()` array without fear of short-circuiting; a single failing query will not cause the entire `Promise.all` to reject, avoiding the need for `Promise.allSettled`.
+**Action:** Always parallelize independent Supabase queries using `Promise.all` to minimize waterfall network latency, especially during initial data fetching in dashboard components.

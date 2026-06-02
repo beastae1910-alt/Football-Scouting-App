@@ -211,6 +211,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field"
+            aria-label="Search players"
             style={{ flex: '1 1 250px', textTransform: 'uppercase', fontWeight: 600 }}
           />
 
@@ -218,6 +219,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
             value={filterPosition}
             onChange={(e) => setFilterPos(e.target.value)}
             className="input-field"
+            aria-label="Filter by position"
             style={{ width: 'auto', minWidth: '160px', textTransform: 'uppercase', fontWeight: 600 }}
           >
             {['All', 'Forward', 'Midfielder', 'Winger', 'Defender', 'Goalkeeper'].map((pos) => (
@@ -229,6 +231,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
             value={filterAge}
             onChange={(e) => setFilterAge(e.target.value)}
             className="input-field"
+            aria-label="Filter by age"
             style={{ width: 'auto', minWidth: '140px', textTransform: 'uppercase', fontWeight: 600 }}
           >
             {AGE_FILTERS.map((age) => (

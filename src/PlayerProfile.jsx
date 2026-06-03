@@ -286,6 +286,7 @@ return (
                         <strong style={{ fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--pitch-green)' }}>{statsDraft[key]}</strong>
                       </div>
                       <input
+                        aria-label={`${key} attribute rating`}
                         type="range"
                         min="0"
                         max="100"

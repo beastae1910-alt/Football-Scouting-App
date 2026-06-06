@@ -1,0 +1,4 @@
+## 2025-02-26 - Profile Role Authorization Bypass via user_metadata Fallback
+**Vulnerability:** The application was falling back to `user.user_metadata.role` when `profile.role` was unavailable (e.g., during fetch errors or initial load). It was also updating `user.user_metadata.role` on the client side in `RoleSelection.jsx`.
+**Learning:** `user_metadata` in Supabase can be freely modified by the client using `supabase.auth.updateUser`. Relying on it for authorization logic (like determining if a user is a 'scout' or 'player') allows users to bypass role restrictions and RLS policies simply by updating their own metadata.
+**Prevention:** Authorization logic must rely solely on securely fetched, database-backed roles (e.g., `profiles` table) protected by RLS. Never fall back to or allow client-side modification of `user_metadata` for critical authorization fields.

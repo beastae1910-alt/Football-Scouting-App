@@ -1,0 +1,3 @@
+## 2024-05-28 - Parallelize Independent Supabase Queries
+**Learning:** In the Supabase JavaScript client used by this project, queries resolve with an object containing `{ data, error, count }` rather than throwing exceptions. This makes grouping them in `Promise.all()` safe from short-circuiting due to expected database query errors. Independent database/Supabase queries in React components should be parallelized using `Promise.all` to minimize network latency and improve dashboard load times.
+**Action:** Use `Promise.all` to parallelize multiple independent Supabase queries within `useEffect` hooks across dashboard components.

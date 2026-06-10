@@ -1,0 +1,4 @@
+## 2024-06-10 - Authorization Bypass via user_metadata
+**Vulnerability:** The application was falling back to `user.user_metadata?.role` for authorization checks (e.g., `effectiveRole`) and updating it client-side via `supabase.auth.updateUser`.
+**Learning:** Client-side updates to `user_metadata` are insecure because a malicious user can intercept or manually call `updateUser` to escalate privileges (e.g., changing their role from 'player' to 'scout' or 'admin'). Authorization logic must rely solely on securely fetched, database-backed data (like `profile.role`) protected by Row Level Security (RLS).
+**Prevention:** Never use or fall back to client-modifiable data (like `user_metadata` updated from the client) for authorization or access control. Always rely on authoritative database state.

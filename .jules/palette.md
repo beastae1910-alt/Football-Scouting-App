@@ -1,0 +1,3 @@
+## 2024-06-11 - Missing Accessible Names on Dashboard Filters
+**Learning:** Dashboard filter controls (inputs and selects) in `PlayerDashboard` and `ScoutDashboard` lacked explicit accessible names, making them difficult to understand for screen reader users. The application relies heavily on placeholders or implicit context instead of explicitly associated `<label>` elements or descriptive `aria-label` attributes.
+**Action:** Always ensure inputs and selects used for filtering have explicitly associated `<label>` elements or descriptive `aria-label` attributes to support screen readers, especially when they are grouped without distinct visual labels.

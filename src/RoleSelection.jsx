@@ -36,13 +36,10 @@ const RoleSelection = ({ user, onRoleSelected }) => {
         if (updateError) throw updateError;
       }
 
-      const { error: metadataError } = await supabase.auth.updateUser({
-        data: { role },
-      });
+      // SECURITY: Removed client-side supabase.auth.updateUser to modify user_metadata.role
+      // Role selection and authorization must rely on the RLS-protected 'profiles' table.
 
-      if (metadataError) throw metadataError;
-
-      onRoleSelected({ ...user, user_metadata: { ...user.user_metadata, role } });
+      onRoleSelected(role);
     } catch (err) {
       console.error('Failed to save role:', err);
       setError('Failed to save role. Please try again.');

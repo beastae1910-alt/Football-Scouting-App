@@ -1,0 +1,3 @@
+## 2024-06-11 - Parallelize Independent Supabase Queries
+**Learning:** In the ScoutXI project, multiple independent database queries fetching counts or lists (e.g. view counts for different types, or top vs. recent viewed players) are often run sequentially using `await` in `useEffect` hooks, leading to unnecessary network latency. Supabase queries resolve with `{ data, error, count }` and do not throw on database errors, so `Promise.all` can group these without short-circuiting valid responses if one query returns an error.
+**Action:** When components load multiple independent datasets from Supabase on mount, group the promises using `Promise.all` to fetch them in parallel and reduce overall loading time.

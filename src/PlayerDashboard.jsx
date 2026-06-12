@@ -30,26 +30,19 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
     if (!playerId) return;
 
     const fetchViews = async () => {
-      const { count, error } = await supabase
-        .from('player_views')
-        .select('*', { count: 'exact', head: true })
-        .eq('player_id', playerId);
-      if (!isMounted) return;
-      if (!error) setRealViews(count || 0);
+      // ⚡ Bolt Optimization: Parallelized independent Supabase queries using Promise.all
+      // Impact: Reduces dashboard load time by performing 3 network requests concurrently instead of sequentially
+      const [viewsResult, searchResult, interestResult] = await Promise.all([
+        supabase.from('player_views').select('*', { count: 'exact', head: true }).eq('player_id', playerId),
+        supabase.from('player_search_views').select('*', { count: 'exact', head: true }).eq('player_id', playerId),
+        supabase.from('scout_interests').select('*', { count: 'exact', head: true }).eq('player_id', playerId)
+      ]);
 
-      const { count: saCount, error: saError } = await supabase
-        .from('player_search_views')
-        .select('*', { count: 'exact', head: true })
-        .eq('player_id', playerId);
       if (!isMounted) return;
-      if (!saError) setSearchApp(saCount || 0);
 
-      const { count: interestCount, error: interestError } = await supabase
-        .from('scout_interests')
-        .select('*', { count: 'exact', head: true })
-        .eq('player_id', playerId);
-      if (!isMounted) return;
-      if (!interestError) setShortlistCount(interestCount || 0);
+      if (!viewsResult.error) setRealViews(viewsResult.count || 0);
+      if (!searchResult.error) setSearchApp(searchResult.count || 0);
+      if (!interestResult.error) setShortlistCount(interestResult.count || 0);
     };
 
     fetchViews();

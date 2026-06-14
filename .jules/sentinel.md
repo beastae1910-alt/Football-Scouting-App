@@ -1,0 +1,4 @@
+## 2024-05-18 - Client-Side Role Modification leading to Authorization Bypass
+**Vulnerability:** The application allowed client-side updates to `user.user_metadata.role` via `supabase.auth.updateUser()`, which was then used as a fallback for `effectiveRole` determining the user's permissions, circumventing the database-enforced RLS policies on the `profiles` table.
+**Learning:** It existed because `user_metadata` was incorrectly trusted as an authoritative source for authorization, likely for immediate UI updates, without realizing it can be arbitrarily modified by the client.
+**Prevention:** Always rely strictly on securely fetched, database-backed roles (e.g., from the `profiles` table) protected by RLS for authorization logic. Never fall back to or allow client-side modification of `user_metadata` for security-sensitive fields.

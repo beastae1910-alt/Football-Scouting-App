@@ -1,0 +1,4 @@
+## 2025-06-16 - Prevent Authorization Bypass via user_metadata
+**Vulnerability:** The application was falling back to `user.user_metadata.role` for setting the user's `effectiveRole` on the client-side, and using `supabase.auth.updateUser` to save the selected role directly into the user's metadata upon onboarding.
+**Learning:** Supabase allows users to arbitrarily call `supabase.auth.updateUser` from the client and modify their own `user_metadata`. Because the application trusted this metadata for authorization rendering, a malicious user could spoof their role, escalating privileges and bypassing access controls.
+**Prevention:** Never use or rely on `user_metadata` for authorization roles or privileges in the frontend or database policies. Roles should exclusively reside in a database table (e.g., `profiles`) protected by Row Level Security (RLS) to ensure immutable, secure access control.

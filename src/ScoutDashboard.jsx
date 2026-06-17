@@ -207,6 +207,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           
           <input
             type="text"
+            aria-label="Search players by name"
             placeholder="SEARCH PLAYERS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -216,6 +217,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
           <select
             value={filterPosition}
+            aria-label="Filter players by position"
             onChange={(e) => setFilterPos(e.target.value)}
             className="input-field"
             style={{ width: 'auto', minWidth: '160px', textTransform: 'uppercase', fontWeight: 600 }}
@@ -227,6 +229,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
           <select
             value={filterAge}
+            aria-label="Filter players by age group"
             onChange={(e) => setFilterAge(e.target.value)}
             className="input-field"
             style={{ width: 'auto', minWidth: '140px', textTransform: 'uppercase', fontWeight: 600 }}

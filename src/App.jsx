@@ -21,7 +21,8 @@ function App() {
   const [error, setError]             = useState(null);
 
   const selectedPlayer = players.find((p) => p.id === selectedId) || null;
-  const effectiveRole = profile?.role || user?.user_metadata?.role || null;
+  // Security Fix: Rely solely on DB-backed profile role
+  const effectiveRole = profile?.role || null;
 
 // ── Auth listener ──────────────────────────────────────────
   useEffect(() => {
@@ -69,15 +70,15 @@ function App() {
           if (!isMounted) return;
           if (error) {
             console.error('Profile fetch error:', error.message);
-            setProfile({ role: user.user_metadata?.role || null });
+            setProfile({ role: null });
           } else {
-            setProfile(data || { role: user.user_metadata?.role || null });
+            setProfile(data || { role: null });
           }
         })
         .catch((profileError) => {
           if (!isMounted) return;
           console.error('Profile fetch failed:', profileError);
-          setProfile({ role: user.user_metadata?.role || null });
+          setProfile({ role: null });
         });
     } else {
       queueMicrotask(() => {
@@ -145,9 +146,9 @@ function App() {
 
   const handleSignOut = () => supabase.auth.signOut();
 
-  const handleRoleSelected = (updatedUser) => {
+  const handleRoleSelected = (updatedUser, role) => {
     setUser(updatedUser);
-    setProfile((prev) => ({ ...(prev || {}), role: updatedUser.user_metadata?.role || null }));
+    setProfile((prev) => ({ ...(prev || {}), role }));
   };
 
   const handleUpload = async (videoData) => {

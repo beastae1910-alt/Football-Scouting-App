@@ -1,0 +1,3 @@
+## 2024-05-24 - Interactive Div vs Semantic Button & Filter Forms A11y
+**Learning:** In ScoutDashboard, the entire player card was made interactive via an `onClick` on a `<div>` which broke keyboard navigation. Furthermore, essential filter inputs (like Name, Position, Status) lacked `aria-label` attributes or explicit labels in both dashboards, making them difficult for screen readers to navigate.
+**Action:** Always bind crucial interactive UI actions to semantically interactive HTML elements like `<button>` instead of container `<div>`s, and ensure all standalone inputs or select elements have descriptive `aria-label`s for full keyboard and screen reader accessibility.

@@ -207,6 +207,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           
           <input
             type="text"
+            aria-label="Search players by name"
             placeholder="SEARCH PLAYERS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,6 +216,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           />
 
           <select
+            aria-label="Filter by position"
             value={filterPosition}
             onChange={(e) => setFilterPos(e.target.value)}
             className="input-field"
@@ -226,6 +228,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           </select>
 
           <select
+            aria-label="Filter by age"
             value={filterAge}
             onChange={(e) => setFilterAge(e.target.value)}
             className="input-field"
@@ -269,8 +272,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
             <div 
               key={player.id} 
               className={`sport-card ${getCardAccent(player.position)}`}
-              style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
-              onClick={() => onSelectPlayer(player)}
+              style={{ display: 'flex', flexDirection: 'column' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                 <span className={`badge ${getPosClass(player.position)}`}>
@@ -285,7 +287,12 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
               <div style={{ flex: 1, marginBottom: '2rem' }}></div>
 
-              <button className="btn btn-secondary" style={{ width: '100%', pointerEvents: 'none' }}>
+              <button
+                onClick={() => onSelectPlayer(player)}
+                className="btn btn-secondary"
+                style={{ width: '100%' }}
+                aria-label={`View dossier for ${player.name}`}
+              >
                 VIEW DOSSIER
               </button>
             </div>

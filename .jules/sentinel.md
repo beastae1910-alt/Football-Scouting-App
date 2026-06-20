@@ -1,0 +1,4 @@
+## 2024-05-28 - Avoid Client-Side Role Updates in `user_metadata`
+**Vulnerability:** Authorization Bypass Vulnerability. The application fell back to `user.user_metadata.role` when `profile.role` wasn't available, and allowed users to update their own `user_metadata.role` via `supabase.auth.updateUser` on the frontend (`RoleSelection.jsx`). This allowed users to potentially elevate privileges by spoofing their role as "admin" or switching roles unauthorizedly.
+**Learning:** Client-side updates to `user_metadata` without server-side validation/triggers bypass secure authorization checks which should exclusively rely on database tables (e.g., `profiles`) protected by RLS (Row Level Security).
+**Prevention:** Never rely on `user_metadata` for secure authorization logic if the client is allowed to modify it directly. Always fetch roles from a protected database table, and remove client-side `updateUser` calls for critical authorization fields.

@@ -169,6 +169,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
             <input
               type="text"
               placeholder="SEARCH PLAYERS..."
+              aria-label="Search players by name"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-field"
@@ -177,6 +178,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
             <select
               value={filterPosition}
               onChange={(e) => setFilterPos(e.target.value)}
+              aria-label="Filter players by position"
               className="input-field"
               style={{ width: 'auto', minWidth: '150px', textTransform: 'uppercase', fontWeight: 700 }}
             >
@@ -187,6 +189,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
             <select
               value={filterAge}
               onChange={(e) => setFilterAge(e.target.value)}
+              aria-label="Filter players by age group"
               className="input-field"
               style={{ width: 'auto', minWidth: '130px', textTransform: 'uppercase', fontWeight: 700 }}
             >

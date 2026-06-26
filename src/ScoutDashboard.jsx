@@ -100,13 +100,16 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
     return () => { isMounted = false; };
   }, [safePlayers]);
 
-  const normalizedSearch = searchQuery.trim().toLowerCase();
-  const filtered = safePlayers.filter(p => {
-    const matchesPos = filterPosition === 'All' || p.position === filterPosition;
-    const matchesAge = matchesAgeFilter(p.age, filterAge);
-    const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
-    return matchesPos && matchesAge && matchesName;
-  });
+  // ⚡ Bolt: Memoize filtered list to prevent expensive recalculations during search typing
+  const filtered = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    return safePlayers.filter(p => {
+      const matchesPos = filterPosition === 'All' || p.position === filterPosition;
+      const matchesAge = matchesAgeFilter(p.age, filterAge);
+      const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
+      return matchesPos && matchesAge && matchesName;
+    });
+  }, [safePlayers, filterPosition, filterAge, searchQuery]);
 
   useEffect(() => {
     filteredRef.current = filtered;

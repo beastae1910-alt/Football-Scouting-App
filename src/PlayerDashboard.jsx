@@ -168,6 +168,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
           <div style={{ background: 'var(--bg-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '3rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <input
               type="text"
+              aria-label="Search players"
               placeholder="SEARCH PLAYERS..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -175,6 +176,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               style={{ flex: 1, minWidth: '200px', textTransform: 'uppercase', fontWeight: 700 }}
             />
             <select
+              aria-label="Filter by position"
               value={filterPosition}
               onChange={(e) => setFilterPos(e.target.value)}
               className="input-field"
@@ -185,6 +187,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               ))}
             </select>
             <select
+              aria-label="Filter by age"
               value={filterAge}
               onChange={(e) => setFilterAge(e.target.value)}
               className="input-field"
@@ -195,7 +198,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
               ))}
             </select>
             {(search || filterPosition !== 'All' || filterAge !== 'All') && (
-              <button onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost">
+              <button aria-label="Reset filters" onClick={() => { setSearch(''); setFilterPos('All'); setFilterAge('All'); }} className="btn btn-ghost">
                 RESET
               </button>
             )}

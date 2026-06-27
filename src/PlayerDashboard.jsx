@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './supabaseClient';
 
 const getPosClass = (pos) => {
@@ -56,7 +56,8 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
     return () => { isMounted = false; };
   }, [userRole, players]);
 
-  const filtered = players.filter((p) => {
+  // Performance optimization: Memoize the filtered list to prevent unnecessary recalculations on unrelated state updates (e.g., view counts)
+  const filtered = useMemo(() => players.filter((p) => {
     const matchesSearch   = (p.name || '').toLowerCase().includes(search.toLowerCase());
     const matchesPosition = filterPosition === 'All' || p.position === filterPosition;
     const matchesAge =
@@ -66,7 +67,7 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
       filterAge === 'Under 21' ? p.age <= 21 : true;
 
     return matchesSearch && matchesPosition && matchesAge;
-  });
+  }), [players, search, filterPosition, filterAge]);
 
   return (
     <div className="container animate-up">

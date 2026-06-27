@@ -1,0 +1,4 @@
+## 2025-02-27 - Authorization Bypass via Client-Side User Metadata
+**Vulnerability:** Application uses `user.user_metadata.role` as a fallback for authorization logic (`effectiveRole`) in `App.jsx`, and `RoleSelection.jsx` allows client-side updating of this metadata via `supabase.auth.updateUser()`.
+**Learning:** Client-side updates to `user_metadata` are generally insecure because any user can spoof or modify their own metadata. Authorization logic must solely rely on the securely fetched, database-backed profile (`profiles.role`) which is protected by RLS.
+**Prevention:** Remove fallback logic checking `user_metadata` for critical roles. Do not use `supabase.auth.updateUser()` to store roles or authorization data; strictly rely on server-side profiles table or secure custom claims where available.

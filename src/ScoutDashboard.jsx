@@ -18,10 +18,10 @@ const getCardAccent = (pos) => {
 };
 
 const CompactCard = ({ player, onClick }) => (
-  <div 
+  <button
     className={`sport-card ${getCardAccent(player.position)}`}
     onClick={() => onClick(player)} 
-    style={{ cursor: 'pointer', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.3s ease', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}
+    style={{ width: '100%', textAlign: 'left', cursor: 'pointer', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', transition: 'all 0.3s ease', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}
   >
     <div style={{ width: '48px', height: '48px', borderRadius: '4px', background: 'var(--bg-dark)', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sport)', fontSize: '1.5rem', color: 'var(--text-main)', transition: 'all 0.2s ease' }}>
       {player.name?.[0]?.toUpperCase() || '?'}
@@ -30,7 +30,7 @@ const CompactCard = ({ player, onClick }) => (
       <h4 style={{ margin: '0 0 0.1rem', fontSize: '1.2rem', fontFamily: 'var(--font-ui)', fontWeight: 700, textTransform: 'none', letterSpacing: 0, transition: 'all 0.2s ease' }}>{player.name}</h4>
       <span className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', transition: 'all 0.2s ease' }}>{player.position}</span>
     </div>
-  </div>
+  </button>
 );
 
 const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
@@ -207,6 +207,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           
           <input
             type="text"
+            aria-label="Search players by name"
             placeholder="SEARCH PLAYERS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,6 +216,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           />
 
           <select
+            aria-label="Filter players by position"
             value={filterPosition}
             onChange={(e) => setFilterPos(e.target.value)}
             className="input-field"
@@ -226,6 +228,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           </select>
 
           <select
+            aria-label="Filter players by age"
             value={filterAge}
             onChange={(e) => setFilterAge(e.target.value)}
             className="input-field"
@@ -269,8 +272,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
             <div 
               key={player.id} 
               className={`sport-card ${getCardAccent(player.position)}`}
-              style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
-              onClick={() => onSelectPlayer(player)}
+              style={{ display: 'flex', flexDirection: 'column' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                 <span className={`badge ${getPosClass(player.position)}`}>
@@ -285,7 +287,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
 
               <div style={{ flex: 1, marginBottom: '2rem' }}></div>
 
-              <button className="btn btn-secondary" style={{ width: '100%', pointerEvents: 'none' }}>
+              <button onClick={() => onSelectPlayer(player)} className="btn btn-secondary" style={{ width: '100%' }}>
                 VIEW DOSSIER
               </button>
             </div>

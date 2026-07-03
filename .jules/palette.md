@@ -1,0 +1,3 @@
+## 2024-07-03 - Interactive elements mapping in cards
+**Learning:** In ScoutDashboard, some interactive cards were implemented as `div` elements with `onClick` handlers, which is not keyboard accessible. Also, some buttons inside cards were decorative (`pointerEvents: 'none'`) while the click event was on the parent `div`. Changing interactive areas to semantically correct `<button>` elements improves keyboard navigation and screen reader support.
+**Action:** Always ensure crucial actions like viewing a profile are bound to semantic interactive elements like `<button>` instead of container `<div>`s, and avoid visual-only pseudo-buttons with `pointerEvents: 'none'`.

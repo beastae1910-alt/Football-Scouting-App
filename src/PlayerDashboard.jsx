@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './supabaseClient';
 
 const getPosClass = (pos) => {
@@ -56,17 +56,21 @@ const PlayerDashboard = ({ players = [], userRole, onSelectPlayer, onAddPlayer }
     return () => { isMounted = false; };
   }, [userRole, players]);
 
-  const filtered = players.filter((p) => {
-    const matchesSearch   = (p.name || '').toLowerCase().includes(search.toLowerCase());
-    const matchesPosition = filterPosition === 'All' || p.position === filterPosition;
-    const matchesAge =
-      filterAge === 'All'      ? true :
-      filterAge === 'Under 16' ? p.age <= 16 :
-      filterAge === 'Under 18' ? p.age <= 18 :
-      filterAge === 'Under 21' ? p.age <= 21 : true;
+  // ⚡ Bolt: Memoize filtered array to prevent O(n) recalculations on unrelated state updates.
+  // Expected impact: Faster renders when shortlistCount or searchAppearances update.
+  const filtered = useMemo(() => {
+    return players.filter((p) => {
+      const matchesSearch   = (p.name || '').toLowerCase().includes(search.toLowerCase());
+      const matchesPosition = filterPosition === 'All' || p.position === filterPosition;
+      const matchesAge =
+        filterAge === 'All'      ? true :
+        filterAge === 'Under 16' ? p.age <= 16 :
+        filterAge === 'Under 18' ? p.age <= 18 :
+        filterAge === 'Under 21' ? p.age <= 21 : true;
 
-    return matchesSearch && matchesPosition && matchesAge;
-  });
+      return matchesSearch && matchesPosition && matchesAge;
+    });
+  }, [players, search, filterPosition, filterAge]);
 
   return (
     <div className="container animate-up">

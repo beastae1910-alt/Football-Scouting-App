@@ -208,6 +208,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           <input
             type="text"
             placeholder="SEARCH PLAYERS..."
+            aria-label="Search players"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field"
@@ -215,6 +216,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           />
 
           <select
+            aria-label="Filter by position"
             value={filterPosition}
             onChange={(e) => setFilterPos(e.target.value)}
             className="input-field"
@@ -226,6 +228,7 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
           </select>
 
           <select
+            aria-label="Filter by age"
             value={filterAge}
             onChange={(e) => setFilterAge(e.target.value)}
             className="input-field"

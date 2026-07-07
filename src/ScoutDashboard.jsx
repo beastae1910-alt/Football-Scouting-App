@@ -101,12 +101,16 @@ const ScoutDashboard = ({ players = [], onSelectPlayer }) => {
   }, [safePlayers]);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
-  const filtered = safePlayers.filter(p => {
-    const matchesPos = filterPosition === 'All' || p.position === filterPosition;
-    const matchesAge = matchesAgeFilter(p.age, filterAge);
-    const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
-    return matchesPos && matchesAge && matchesName;
-  });
+
+  const filtered = useMemo(() => {
+    // ⚡ Bolt: Memoize filtered list to avoid recalculation on unrelated state changes
+    return safePlayers.filter(p => {
+      const matchesPos = filterPosition === 'All' || p.position === filterPosition;
+      const matchesAge = matchesAgeFilter(p.age, filterAge);
+      const matchesName = (p.name || '').toLowerCase().includes(normalizedSearch);
+      return matchesPos && matchesAge && matchesName;
+    });
+  }, [safePlayers, filterPosition, filterAge, normalizedSearch]);
 
   useEffect(() => {
     filteredRef.current = filtered;

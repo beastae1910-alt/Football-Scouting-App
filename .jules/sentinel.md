@@ -1,0 +1,4 @@
+## 2024-07-07 - Fix Authorization Bypass via user_metadata
+**Vulnerability:** Authorization logic trusted client-modifiable `user.user_metadata.role` as a fallback when determining user roles (e.g., `effectiveRole = profile?.role || user?.user_metadata?.role`). A malicious user could update their own `user_metadata` via the Supabase client (`supabase.auth.updateUser`) to elevate their privileges to 'scout', bypassing server-side database constraints (RLS).
+**Learning:** Client-side user metadata in Supabase can be freely modified by the authenticated user and must never be used as a source of truth for authorization or role-based access control.
+**Prevention:** Always rely strictly on securely fetched, database-backed user profiles (e.g., `profiles` table) protected by Row Level Security (RLS) for authorization logic.

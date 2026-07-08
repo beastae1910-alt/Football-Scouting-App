@@ -1,0 +1,3 @@
+## 2024-07-08 - Use Promise.all for independent Supabase queries
+**Learning:** The Player Dashboard loaded stats using three sequential `await supabase.from(...).select(...)` calls. Since these are independent database aggregations, sequential await causes a request waterfall (O(A+B+C)). The Supabase client resolves queries into `{ data, error, count }` objects rather than throwing errors, making them perfectly safe to group in `Promise.all()` without risk of short-circuiting if one fails.
+**Action:** Identify independent Supabase query operations and wrap them in `Promise.all` to fetch data concurrently, preventing request waterfalls and speeding up dashboard load times.
